@@ -1,0 +1,63 @@
+:root {
+  --bg: #f5f6f8;
+  --panel: #ffffff;
+  --border: #dde1e6;
+  --text: #1f2933;
+  --muted: #6b7280;
+  --accent: #2563eb;
+  --ok: #16a34a;
+  --bad: #dc2626;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+#app { min-height: 100vh; }
+
+/* 全局横向溢出防护：长 URL/长文本不撑破视口 */
+img, table, pre { max-width: 100%; }
+main, section, article, .card { min-width: 0; }
+
+/* ---- 移动端适配 ---- */
+@media (max-width: 640px) {
+  body {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+  #app { padding-bottom: env(safe-area-inset-bottom, 0); }
+  html, body { overflow-x: hidden; }
+}
+
+/* 触控友好：小屏上所有按钮/可点元素增大命中区域 */
+@media (max-width: 640px) {
+  button,
+  select,
+  input[type="number"],
+  a {
+    min-height: 44px;
+  }
+  nav button,
+  .subjects button {
+    min-height: 38px;
+  }
+  .options button {
+    min-height: 48px;
+    padding: 12px 14px;
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  main { padding: 0 12px; }
+  header { padding: 10px 12px; }
+  .subjects { padding: 8px 12px; }
+  .subjects { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; flex-wrap: nowrap; }
+  .subjects::-webkit-scrollbar { display: none; }
+  .subjects button { flex: none; white-space: nowrap; }
+}
