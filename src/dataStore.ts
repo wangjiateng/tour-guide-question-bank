@@ -194,7 +194,36 @@ function matchesYear(years: string | null, year: number): boolean {
   return years != null && years.split(",").map(Number).includes(year);
 }
 
-/** 随机抽题：与旧 API 一致，先按年份降序再洗牌取样。 */
+/** 近三年（2023-2025）真题：组卷/答题优先出题，其他年份真题与无年份练习作为补充。 */
+const RECENT_YEARS = new Set(["2023", "2024", "2025"]);
+/** 近三年题在组卷中的目标占比（其余由其他年份/无年份题补足）。 */
+const RECENT_RATIO = 0.7;
+
+function isRecent(q: Question): boolean {
+  return (q.years ?? "").split(",").some((y) => RECENT_YEARS.has(y.trim()));
+}
+
+/** Fisher-Yates 洗牌（返回新数组）。 */
+function shuffle<T>(arr: T[]): T[] {
+  const out = [...arr];
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [out[i], out[j]] = [out[j]!, out[i]!];
+  }
+  return out;
+}
+
+/** 近三年优先取题：先从近三年池抽（目标占比），不足用其他池补足。 */
+function pickWeighted<T>(pool: T[], size: number, recent: (t: T) => boolean): T[] {
+  const recentPool = shuffle(pool.filter(recent));
+  const restPool = shuffle(pool.filter((t) => !recent(t)));
+  const nRecent = Math.min(recentPool.length, Math.round(size * RECENT_RATIO));
+  const out = recentPool.slice(0, nRecent);
+  if (out.length < size) out.push(...restPool.slice(0, size - out.length));
+  return out;
+}
+
+/** 随机抽题：近三年（2023-2025）真题优先（目标占比 70%），其余由其他年份/无年份题补足。 */
 export async function randomQuiz(opts: QuizOptions): Promise<Question[]> {
   const { size, answeredOnly, subject, sourceId, year } = opts;
   const subjects = subject == null ? [null, 1, 2, 3, 4] : [subject];
@@ -202,14 +231,7 @@ export async function randomQuiz(opts: QuizOptions): Promise<Question[]> {
   if (answeredOnly) pool = pool.filter((q) => q.answer);
   if (sourceId != null) pool = pool.filter((q) => q.source_id === sourceId);
   if (year != null) pool = pool.filter((q) => matchesYear(q.years, year));
-  pool = pool.sort((a, b) => (b.years ?? "").localeCompare(a.years ?? "") || b.id - a.id);
-  // Fisher-Yates 洗牌后取前 size 道
-  const shuffled = [...pool];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j]!, shuffled[i]!];
-  }
-  return shuffled.slice(0, Math.min(size, shuffled.length));
+  return pickWeighted(pool, Math.min(size, pool.length), isRecent);
 }
 
 /** 浏览：过滤 + 分页，按年份降序（移植自 /api/questions）。 */
@@ -332,9 +354,9 @@ const EXAM_PAPERS: Record<number, { subjects: number[]; label: string }> = {
   1: { subjects: [1, 2], label: "科目一+科目二 合并卷（政策法规+导游业务）" },
   2: { subjects: [3, 4], label: "科目三+科目四 合并卷（全国基础+地方知识）" },
 };
-const EXAM_TYPE_COUNTS: [number, number][] = [[1, 45], [2, 35], [3, 40]];
-const EXAM_TYPE_SCORES: Record<number, number> = { 1: 1, 2: 1, 3: 0.5 };
-const EXAM_MINUTES = 165;
+const EXAM_TYPE_COUNTS: [number, number][] = [[1, 90], [2, 35], [3, 40]]; // 官方大纲：单选90+多选35+判断40
+const EXAM_TYPE_SCORES: Record<number, number> = { 1: 0.5, 2: 1, 3: 0.5 }; // 官方分值：单选0.5/多选1/判断0.5
+const EXAM_MINUTES = 90; // 官方每卷 90 分钟
 
 interface ExamSession {
   questions: Question[];
@@ -353,12 +375,8 @@ export async function examPaper(paperType: number): Promise<ExamPaper> {
     const candidates = pool.filter(
       (q) => q.q_type === qType && q.answer && paper.subjects.includes(q.subject ?? -1),
     );
-    // 洗牌取 want 道（受题库库存上限）
-    for (let i = candidates.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [candidates[i], candidates[j]] = [candidates[j]!, candidates[i]!];
-    }
-    const chosen = candidates.slice(0, want);
+    // 近三年真题优先取 want 道（不足用其他年份/无年份题补足，受库存上限）
+    const chosen = pickWeighted(candidates, want, isRecent);
     picked.push(...chosen);
     typeCounts[qType] = chosen.length;
   }
