@@ -197,7 +197,7 @@ function matchesYear(years: string | null, year: number): boolean {
 /** 近三年（2023-2025）真题：组卷/答题优先出题，其他年份真题与无年份练习作为补充。 */
 const RECENT_YEARS = new Set(["2023", "2024", "2025"]);
 /** 近三年题在组卷中的目标占比（其余由其他年份/无年份题补足）。 */
-const RECENT_RATIO = 0.7;
+const RECENT_RATIO = 0.3;
 
 function isRecent(q: Question): boolean {
   return (q.years ?? "").split(",").some((y) => RECENT_YEARS.has(y.trim()));
