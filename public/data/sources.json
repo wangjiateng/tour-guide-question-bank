@@ -1,0 +1,264 @@
+{
+  "sources": [
+    {
+      "id": 17,
+      "url": "fixture://demo",
+      "title": "",
+      "kind": "fixture",
+      "status": "ready",
+      "question_count": 1,
+      "last_refresh_at": "2026-08-13 09:08:14",
+      "created_at": "2026-08-13 09:08:05"
+    },
+    {
+      "id": 19,
+      "url": "https://www.examcoo.com/paperlist/index/k/408/p/1",
+      "title": "6.29导游业务第1至第3章单选题",
+      "kind": "examcoo",
+      "status": "ready",
+      "question_count": 13,
+      "last_refresh_at": "2026-08-17 06:53:35",
+      "created_at": "2026-08-13 09:09:19"
+    },
+    {
+      "id": 21,
+      "url": "https://www.examcoo.com/paperlist/index/k/409/p/1",
+      "title": "《桂林渔鼓》知多少",
+      "kind": "examcoo",
+      "status": "ready",
+      "question_count": 248,
+      "last_refresh_at": "2026-08-17 06:55:59",
+      "created_at": "2026-08-13 09:15:21"
+    },
+    {
+      "id": 23,
+      "url": "https://www.examcoo.com/paperlist/index/k/413/p/1",
+      "title": "科目一+科目二模拟试卷第一套",
+      "kind": "examcoo",
+      "status": "ready",
+      "question_count": 119,
+      "last_refresh_at": "2026-08-17 06:56:05",
+      "created_at": "2026-08-13 09:15:28"
+    },
+    {
+      "id": 24,
+      "url": "https://www.examcoo.com/paperlist/index/k/414/p/1",
+      "title": "2012年导游资格考试《导游特殊问题处理及应变能力》模拟试题一",
+      "kind": "examcoo",
+      "status": "ready",
+      "question_count": 0,
+      "last_refresh_at": "2026-08-13 09:54:50",
+      "created_at": "2026-08-13 09:15:29"
+    },
+    {
+      "id": 42,
+      "url": "https://www.daoyouhome.com/zghelp/2065.html",
+      "title": "2023年全国导游资格考试真题",
+      "kind": "static_page",
+      "status": "ready",
+      "question_count": 38,
+      "last_refresh_at": null,
+      "created_at": "2026-08-14 08:05:43"
+    },
+    {
+      "id": 43,
+      "url": "https://www.daoyouhome.com/zghelp/2514.html",
+      "title": "2024年全国导游资格考试真题",
+      "kind": "static_page",
+      "status": "ready",
+      "question_count": 80,
+      "last_refresh_at": null,
+      "created_at": "2026-08-14 08:05:43"
+    },
+    {
+      "id": 44,
+      "url": "https://www.daoyouhome.com/zghelp/2831.html",
+      "title": "2025年全国导游资格考试真题",
+      "kind": "static_page",
+      "status": "ready",
+      "question_count": 89,
+      "last_refresh_at": null,
+      "created_at": "2026-08-14 08:05:43"
+    },
+    {
+      "id": 48,
+      "url": "http://x.local/",
+      "title": "exam",
+      "kind": "examcoo",
+      "status": "ready",
+      "question_count": 0,
+      "last_refresh_at": null,
+      "created_at": "2026-08-17 07:16:57"
+    },
+    {
+      "id": 49,
+      "url": "http://w.local/",
+      "title": "w",
+      "kind": "fixture",
+      "status": "ready",
+      "question_count": 0,
+      "last_refresh_at": null,
+      "created_at": "2026-08-17 07:17:15"
+    },
+    {
+      "id": 50,
+      "url": "https://www.hqwx.com/dyz-kaoshi/ziliaolm/934093.html",
+      "title": "2023年全国导游资格考试真题（科目一+科目二）",
+      "kind": "static_page",
+      "status": "ready",
+      "question_count": 129,
+      "last_refresh_at": null,
+      "created_at": "2026-08-25 22:20:00"
+    },
+    {
+      "id": 51,
+      "url": "https://www.hqwx.com/dyz-kaoshi/ziliaolm/1061021.html",
+      "title": "2024年全国导游资格考试真题（科目一+科目二）",
+      "kind": "static_page",
+      "status": "ready",
+      "question_count": 132,
+      "last_refresh_at": null,
+      "created_at": "2026-08-25 22:20:00"
+    },
+    {
+      "id": 52,
+      "url": "https://www.hqwx.com/dyz-kaoshi/ziliaolm/1062935.html",
+      "title": "2024年全国导游资格考试真题（科目三+科目四）",
+      "kind": "static_page",
+      "status": "ready",
+      "question_count": 115,
+      "last_refresh_at": null,
+      "created_at": "2026-08-25 22:20:00"
+    },
+    {
+      "id": 53,
+      "url": "https://www.hqwx.com/dyz-kaoshi/news/17267375252553.html",
+      "title": "2023年全国导游资格考试真题（科目三+科目四）练习",
+      "kind": "static_page",
+      "status": "ready",
+      "question_count": 1,
+      "last_refresh_at": null,
+      "created_at": "2026-08-25 22:20:00"
+    },
+    {
+      "id": 54,
+      "url": "https://www.hqwx.com/dyz-kaoshi/zhenti",
+      "title": "2025年全国导游资格考试真题（回忆版）",
+      "kind": "static_page",
+      "status": "ready",
+      "question_count": 13,
+      "last_refresh_at": null,
+      "created_at": "2026-08-25 22:20:00"
+    },
+    {
+      "id": 55,
+      "url": "https://www.hqwx.com/dyz-kaoshi/ziliaolm/933939.html",
+      "title": "2023年全国导游资格考试真题（科目三+科目四）完整版",
+      "kind": "static_page",
+      "status": "ready",
+      "question_count": 85,
+      "last_refresh_at": null,
+      "created_at": "2026-08-25 23:00:00"
+    },
+    {
+      "id": 56,
+      "url": "https://github.com/wsj414855138-code/tour-guide-trainer",
+      "title": "2025年全国导游资格考试真题（回忆版）-tour-guide-trainer",
+      "kind": "static_page",
+      "status": "ready",
+      "question_count": 21,
+      "last_refresh_at": null,
+      "created_at": "2026-08-25 23:00:00"
+    },
+    {
+      "id": 57,
+      "url": "https://github.com/wsj414855138-code/tour-guide-trainer",
+      "title": "2026年全国导游资格考试模拟卷-tour-guide-trainer",
+      "kind": "static_page",
+      "status": "ready",
+      "question_count": 0,
+      "last_refresh_at": null,
+      "created_at": "2026-08-25 23:00:00"
+    },
+    {
+      "id": 58,
+      "url": "https://github.com/wsj414855138-code/tour-guide-trainer",
+      "title": "全国导游资格考试原创练习题-tour-guide-trainer",
+      "kind": "static_page",
+      "status": "ready",
+      "question_count": 96,
+      "last_refresh_at": null,
+      "created_at": "2026-08-25 23:00:00"
+    },
+    {
+      "id": 59,
+      "url": "https://github.com/123-cy111/daoyou-exam",
+      "title": "导游资格考试练习系统题库-daoyou-exam",
+      "kind": "static_page",
+      "status": "ready",
+      "question_count": 263,
+      "last_refresh_at": null,
+      "created_at": "2026-08-25 23:00:00"
+    },
+    {
+      "id": 60,
+      "url": "https://www.examcoo.com/paperlist/index/k/407/p/1",
+      "title": "考试酷-旅游方针政策与法规试卷全量（2004-2019）",
+      "kind": "examcoo",
+      "status": "ready",
+      "question_count": 78,
+      "last_refresh_at": null,
+      "created_at": "2026-08-25 23:40:00"
+    },
+    {
+      "id": 61,
+      "url": "https://www.examcoo.com/paperlist/index/k/408/p/1",
+      "title": "考试酷-导游业务试卷全量（2004-2019）",
+      "kind": "examcoo",
+      "status": "ready",
+      "question_count": 1,
+      "last_refresh_at": null,
+      "created_at": "2026-08-25 23:40:00"
+    },
+    {
+      "id": 62,
+      "url": "https://www.examcoo.com/paperlist/index/k/409/p/1",
+      "title": "考试酷-导游基础知识试卷全量（2004-2019）",
+      "kind": "examcoo",
+      "status": "ready",
+      "question_count": 11,
+      "last_refresh_at": null,
+      "created_at": "2026-08-25 23:40:00"
+    },
+    {
+      "id": 63,
+      "url": "https://www.examcoo.com/paperlist/index/k/410/p/1",
+      "title": "考试酷-汉语言文学基础试卷全量",
+      "kind": "examcoo",
+      "status": "ready",
+      "question_count": 0,
+      "last_refresh_at": null,
+      "created_at": "2026-08-25 23:40:00"
+    },
+    {
+      "id": 64,
+      "url": "https://www.examcoo.com/paperlist/index/k/413/p/1",
+      "title": "考试酷-导游规范服务能力试卷全量",
+      "kind": "examcoo",
+      "status": "ready",
+      "question_count": 40,
+      "last_refresh_at": null,
+      "created_at": "2026-08-25 23:40:00"
+    },
+    {
+      "id": 66,
+      "url": "https://ke.91up.cn/special/141",
+      "title": "2025年导游资格证笔试真题（考生回忆版）-101贝考",
+      "kind": "static_page",
+      "status": "ready",
+      "question_count": 264,
+      "last_refresh_at": null,
+      "created_at": "2026-08-26 00:10:00"
+    }
+  ]
+}

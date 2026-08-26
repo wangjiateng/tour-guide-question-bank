@@ -1,0 +1,115 @@
+:root {
+  --bg: #f5f6f8;
+  --panel: #ffffff;
+  --border: #dde1e6;
+  --text: #1f2933;
+  --muted: #6b7280;
+  --accent: #2563eb;
+  --ok: #16a34a;
+  --bad: #dc2626;
+  /* 触控目标基线（Material/Apple HIG 一致推荐 ≥44px） */
+  --tap-min: 44px;
+  --tap-min-tight: 40px;
+}
+
+* { box-sizing: border-box; }
+
+html, body { min-height: 100%; }
+
+body {
+  margin: 0;
+  font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+#app { min-height: 100vh; min-height: 100dvh; }
+
+/* ---- 全局横向溢出防护 ---- */
+img, table, pre, code { max-width: 100%; }
+main, section, article, .card { min-width: 0; }
+a { overflow-wrap: anywhere; word-break: break-word; }
+.options button, .question, .qtext, .q, .meta, .origin, .explanation, td {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+td.url, .url { word-break: break-all; overflow-wrap: anywhere; }
+
+/* ---- 通用交互元素基线（桌面默认） ---- */
+button, select, input, textarea {
+  font: inherit;
+  color: inherit;
+}
+input[type="number"], input[type="url"], input[type="text"], select, textarea {
+  min-height: 36px;
+}
+
+/* =========================================================
+   响应式断点
+   - ≤1024 中等桌面 / 平板横屏
+   - ≤768  平板竖屏 / 大屏手机
+   - ≤480  小屏手机
+   - ≤360  超窄屏
+   ========================================================= */
+
+/* ---- ≤1024 平板/小桌面：主体宽度更紧凑 ---- */
+@media (max-width: 1024px) {
+  main { max-width: 100%; }
+}
+
+/* ---- ≤768 竖屏移动端：主适配层 ---- */
+@media (max-width: 768px) {
+  body {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+  html, body { overflow-x: clip; }
+  #app { padding-bottom: env(safe-area-inset-bottom, 0); }
+
+  /* 强制所有按钮/输入/选择/链接 ≥44px 触控目标 */
+  button, select, input[type="number"], input[type="url"], input[type="text"], textarea, a {
+    min-height: var(--tap-min);
+  }
+  /* 导航/科目行可略小，但不低于 40 */
+  nav button, .subjects button, .nav button, .pager button {
+    min-height: var(--tap-min-tight);
+  }
+  /* 选项按钮需要更大命中区 */
+  .options button {
+    min-height: 48px;
+    padding: 12px 14px;
+    font-size: 15px;
+  }
+  /* 表单输入 16px 以上避免 iOS 缩放 */
+  input, select, textarea { font-size: 16px; }
+
+  /* 主体更紧凑的留白 */
+  main { padding: 0 12px; }
+}
+
+/* ---- ≤480 小屏手机：网格、字号、按钮内边距 ---- */
+@media (max-width: 480px) {
+  main { padding: 0 10px; }
+  header { padding: 10px 12px; }
+  .subjects { padding: 8px 10px; }
+  .subjects {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    flex-wrap: nowrap;
+  }
+  .subjects::-webkit-scrollbar { display: none; }
+  .subjects button { flex: none; white-space: nowrap; }
+
+  /* 题目字号紧凑 */
+  .question, .qtext, #quiz-question { font-size: 16px; line-height: 1.7; }
+}
+
+/* ---- ≤360 超窄屏：单列、强降密度 ---- */
+@media (max-width: 360px) {
+  main { padding: 0 8px; }
+  h1 { font-size: 17px; }
+  .options button { padding: 10px 12px; font-size: 14px; }
+  .stats { font-size: 12px; }
+}

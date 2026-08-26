@@ -1,17 +1,9 @@
-__pycache__/
-*.pyc
-.venv/
-data/*.db
-data/*.db-*
-data/*.bak*
+dev-review-code/
+dev-review-code.zip
+node_modules/
+dist/
+tsconfig.tsbuildinfo
+.vite/
 .loopx/
 .codex/
 .pi/
-dev-review-code/
-dev-review-code.zip
-frontend/node_modules/
-frontend/dist/
-frontend/tsconfig.tsbuildinfo
-# 旧版 vanilla 实现，已被 src/ 取代（无引用）
-frontend/app.js
-frontend/style.css

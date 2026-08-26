@@ -1,0 +1,53 @@
+# GitHub Pages 部署：构建 dist 并发布静态站点
+#
+# 启用方式（一次性）：
+#   仓库 Settings → Pages → Source 选 "GitHub Actions"
+# 之后每次 push 到 master 或手动触发（Actions → Deploy to GitHub Pages → Run workflow），
+# 站点会自动发布到 https://<user>.github.io/<repo>/
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 同一时间只跑一个发布任务；新 push 会取消进行中的旧构建
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.0
+      - name: Install dependencies
+        run: |
+          npm install -g npm@10.9.4
+          npm ci
+      - name: Build (vue-tsc + vite)
+        run: npm run build
+      - uses: actions/configure-pages@v5
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
