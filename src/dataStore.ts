@@ -112,6 +112,17 @@ function subjectKey(subject: number | null): (typeof SUBJECT_KEYS)[number] {
   return subject == null ? "0" : String(subject) as (typeof SUBJECT_KEYS)[number];
 }
 
+/** years 字段归一化：历史数据存在 list 脏值（如 ['0','1','2','4']），统一转成逗号分隔字符串或 null。
+ *  仅保留 4 位数字年份（如 2012），脏值/空串一律归 null，保证下游 .split(",") 安全。 */
+function normalizeYears(years: unknown): string | null {
+  if (years == null) return null;
+  const parts = Array.isArray(years) ? years : String(years).split(",");
+  const valid = parts
+    .map((p) => String(p).trim())
+    .filter((p) => /^\d{4}$/.test(p));
+  return valid.length ? valid.join(",") : null;
+}
+
 /** 加载 manifest（统计信息，App 头部与 stats 用）。 */
 export async function loadManifest(): Promise<Manifest> {
   manifestCache ??= await fetchJson<Manifest>(DATA_BASE + "manifest.json");
@@ -134,6 +145,8 @@ export function loadSubjectQuestions(subject: number | null): Promise<Question[]
   if (!loading[key]) {
     loading[key] = fetchJson<QuestionsFile>(DATA_BASE + `questions_${key}.json`)
       .then((file) => {
+        // years 存在 list 脏值的历史数据，加载时统一归一化，保证组卷/排序/展示不崩
+        for (const q of file.questions) q.years = normalizeYears(q.years);
         loaded[key] = file.questions;
         return file.questions;
       })
@@ -265,7 +278,13 @@ const LS_KEY = "daoyou_tiku_attempts_v1";
 function readAttempts(): Attempt[] {
   try {
     const raw = localStorage.getItem(LS_KEY);
-    return raw ? (JSON.parse(raw) as Attempt[]) : [];
+    if (!raw) return [];
+    const list = JSON.parse(raw) as Attempt[];
+    // 历史快照的 years 可能存过 list 脏值，读取时统一归一化防崩
+    for (const a of list) {
+      if (a.question) a.question.years = normalizeYears(a.question.years);
+    }
+    return list;
   } catch {
     return [];
   }
