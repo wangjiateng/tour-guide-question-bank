@@ -218,7 +218,7 @@ onBeforeUnmount(() => {
           {{ t.label }}
         </button>
       </div>
-      <p v-if="loading" class="hint">正在组卷…</p>
+      <p v-if="loading" class="hint">正在组卷…题库较大，首次加载需下载约十几 MB，请耐心等待；再次进入将秒开。</p>
       <p v-if="error" class="error">{{ error }}</p>
     </div>
 
@@ -263,7 +263,8 @@ onBeforeUnmount(() => {
           }"
         >
           <input
-            type="checkbox"
+            :type="current.q_type === 2 ? 'checkbox' : 'radio'"
+            :name="current.q_type === 2 ? undefined : `q-${current.id}`"
             :checked="isSelected(LETTER(i))"
             :disabled="finished || checking"
             @change="toggleOption(LETTER(i))"
@@ -463,7 +464,7 @@ onBeforeUnmount(() => {
   }
   .qnav button { min-height: 40px; font-size: 13px; }
   .option { padding: 12px 10px; }
-  .option input[type="checkbox"] { width: 22px; height: 22px; flex: none; }
+  .option input[type="checkbox"], .option input[type="radio"] { width: 22px; height: 22px; flex: none; }
   .multi-confirm button { min-height: 44px; }
   .qtext { font-size: 16px; }
   .pager { flex-wrap: wrap; }
@@ -479,6 +480,6 @@ onBeforeUnmount(() => {
   .paper-label { font-size: 14px; }
   .qtext { font-size: 15px; }
   .option { padding: 10px 8px; }
-  .option input[type="checkbox"] { width: 20px; height: 20px; }
+  .option input[type="checkbox"], .option input[type="radio"] { width: 20px; height: 20px; }
 }
 </style>

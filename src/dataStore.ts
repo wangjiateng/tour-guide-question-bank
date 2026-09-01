@@ -52,13 +52,82 @@ let sourcesCache: Source[] | null = null;
 const loaded: Partial<Record<(typeof SUBJECT_KEYS)[number], Question[]>> = {};
 const loading: Partial<Record<(typeof SUBJECT_KEYS)[number], Promise<Question[]>>> = {};
 
-/** 主源（部署所在域名）单次超时：移动网络下易超时，短超时快速切换备用源。 */
+/** 主源（部署所在域名）单次超时：移动网络下易超时，短超时快速让位于备用源。 */
+const PRIMARY_TIMEOUT_MS = 4_000;
+/** 备用源（jsDelivr CDN）单次超时：CDN 是大陆主要可用路径，给足时间。 */
 const FETCH_TIMEOUT_MS = 8_000;
-/** 备用源（jsDelivr CDN）退避重试次数：1s → 2s。 */
-const FETCH_MAX_RETRIES = 2;
 /** 备用数据源：github.io 在大陆移动网络不稳定，题库 JSON 经 jsDelivr CDN 镜像拉取。
  *  数据文件需随仓库提交到 master（public/data/），CDN 缓存约 12h 内更新。 */
 const CDN_MIRROR_BASE = "https://cdn.jsdelivr.net/gh/wangjiateng/tour-guide-question-bank@master/public/data/";
+
+/** 题库数据持久缓存（Cache API）：全量题库约 14MB，刷新页面后命中缓存秒开，无需重新下载。
+ *  键 = 文件绝对 URL + `?v=` + manifest.generated_at：题库更新（版本号变化）后自动失效重下。
+ *  Cache API 仅在安全上下文（https / localhost）可用，不可用时静默降级为纯网络加载。 */
+const DATA_CACHE_NAME = "daoyou-tiku-data-v1";
+/** manifest 的 generated_at，作为题库版本号（持久缓存的失效依据）。 */
+let dataVersion: string | null = null;
+
+/** 打开持久缓存；环境不支持（file:// / 隐私模式等）时返回 null。 */
+async function cacheStorage(): Promise<Cache | null> {
+  try {
+    if (typeof caches === "undefined") return null;
+    return await caches.open(DATA_CACHE_NAME);
+  } catch {
+    return null;
+  }
+}
+
+/** 按版本化键读持久缓存；未命中 / 损坏时返回 null（走网络）。 */
+async function cacheRead<T>(key: string): Promise<T | null> {
+  const cache = await cacheStorage();
+  if (!cache) return null;
+  try {
+    const res = await cache.match(key);
+    if (!res || !res.ok) return null;
+    return (await res.json()) as T;
+  } catch {
+    return null;
+  }
+}
+
+/** 写持久缓存；写失败（配额/隐私）不影响主流程。写入前清理同文件其他版本的旧条目，防累积。 */
+async function cacheWrite<T>(key: string, data: T): Promise<void> {
+  const cache = await cacheStorage();
+  if (!cache) return;
+  try {
+    const base = key.split("?")[0]!;
+    const keys = await cache.keys();
+    for (const k of keys) {
+      if (k.url.split("?")[0] === base && k.url !== key) await cache.delete(k);
+    }
+    await cache.put(
+      key,
+      new Response(JSON.stringify(data), { headers: { "Content-Type": "application/json" } }),
+    );
+  } catch {
+    // 静默：缓存写失败不影响组卷
+  }
+}
+
+/** 多个请求并发竞速，先成功者胜（其余请求由其自身超时 abort，无泄漏）。 */
+function firstFulfilled<T>(promises: Promise<T>[]): Promise<T> {
+  return new Promise((resolve, reject) => {
+    let pending = promises.length;
+    let lastErr: unknown;
+    for (const p of promises) {
+      p.then(resolve, (e) => {
+        lastErr = e;
+        if (--pending === 0) reject(lastErr);
+      });
+    }
+  });
+}
+
+/** 版本化缓存键：同一文件不同版本独立缓存，写新键时旧键自动清理。 */
+function cacheKey(path: string): string {
+  const abs = new URL(path, document.baseURI).href;
+  return dataVersion ? `${abs}?v=${encodeURIComponent(dataVersion)}` : abs;
+}
 
 /** 单次请求（带超时）。 */
 async function fetchOnce<T>(url: string, timeoutMs: number): Promise<T> {
@@ -75,27 +144,19 @@ async function fetchOnce<T>(url: string, timeoutMs: number): Promise<T> {
   }
 }
 
-/** 拉取题库 JSON：主源短超时，失败后自动切换到 jsDelivr CDN 备用源（带退避重试）。 */
-async function fetchJson<T>(path: string): Promise<T> {
+/** 纯网络拉取题库 JSON（无缓存）：主源与 CDN 并行竞速，先成功者胜，避免主源超时的串行等待。 */
+async function fetchJsonNetwork<T>(path: string): Promise<T> {
   const fileName = path.split("/").pop() ?? path;
   const mirror = CDN_MIRROR_BASE + fileName;
   let lastErr: unknown;
-  // 主源：相对路径（github.io / 当前部署域名），数据最新
+  // 主源 + 备用源（CDN）同时发起：谁先返回用谁。移动网络下 github.io 常慢，CDN 通常更快。
   try {
-    return await fetchOnce<T>(path, 6_000);
+    return await firstFulfilled<T>([
+      fetchOnce<T>(path, PRIMARY_TIMEOUT_MS),
+      fetchOnce<T>(mirror, FETCH_TIMEOUT_MS),
+    ]);
   } catch (e) {
     lastErr = e;
-  }
-  // 备用源：jsDelivr CDN（国内可达），带退避重试
-  for (let attempt = 0; attempt <= FETCH_MAX_RETRIES; attempt++) {
-    try {
-      return await fetchOnce<T>(mirror, FETCH_TIMEOUT_MS);
-    } catch (e) {
-      lastErr = e;
-      if (attempt < FETCH_MAX_RETRIES) {
-        await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
-      }
-    }
   }
   // 全部失败：给出可操作的中文提示
   if (lastErr instanceof Error && lastErr.name === "AbortError") {
@@ -105,6 +166,20 @@ async function fetchJson<T>(path: string): Promise<T> {
     throw new Error(`无法连接题库服务器（${path}），请检查网络后重试`);
   }
   throw lastErr instanceof Error ? lastErr : new Error(String(lastErr));
+}
+
+/** 拉取题库 JSON（默认带持久缓存）：命中缓存秒开；未命中走网络并写入缓存。
+ *  manifest.json 是版本源，必须实时拉取（cache=false）。 */
+async function fetchJson<T>(path: string, opts?: { cache?: boolean }): Promise<T> {
+  const useCache = opts?.cache ?? true;
+  const key = cacheKey(path);
+  if (useCache) {
+    const cached = await cacheRead<T>(key);
+    if (cached != null) return cached;
+  }
+  const data = await fetchJsonNetwork<T>(path);
+  if (useCache) await cacheWrite(key, data);
+  return data;
 }
 
 /** 题目文件键：subject NULL → "0"，科目 1-4 → 字符串 */
@@ -123,36 +198,41 @@ function normalizeYears(years: unknown): string | null {
   return valid.length ? valid.join(",") : null;
 }
 
-/** 加载 manifest（统计信息，App 头部与 stats 用）。 */
+/** 加载 manifest（统计信息 + 题库版本号，App 头部与 stats 用）。
+ *  manifest 是版本源，始终实时拉取（不持久缓存），成功后记录 generated_at 作为题库版本。 */
 export async function loadManifest(): Promise<Manifest> {
-  manifestCache ??= await fetchJson<Manifest>(DATA_BASE + "manifest.json");
+  if (!manifestCache) {
+    manifestCache = await fetchJson<Manifest>(DATA_BASE + "manifest.json", { cache: false });
+    dataVersion = manifestCache.generated_at;
+  }
   return manifestCache;
 }
 
-/** 加载来源元数据（Quiz/Browse 的「来源」筛选用）。 */
+/** 加载来源元数据（Quiz/Browse 的「来源」筛选用）。加载前先确保版本号就绪，持久缓存才能正确失效。 */
 export async function loadSources(): Promise<Source[]> {
   if (sourcesCache == null) {
+    await loadManifest(); // 版本号就绪（内存缓存，开销可忽略）
     const file = await fetchJson<SourcesFile>(DATA_BASE + "sources.json");
     sourcesCache = file.sources;
   }
   return sourcesCache;
 }
 
-/** 加载某科目题目文件（懒加载 + 并发去重）。subject null 表示未分类（0）。 */
+/** 加载某科目题目文件（懒加载 + 并发去重 + 持久缓存）。subject null 表示未分类（0）。 */
 export function loadSubjectQuestions(subject: number | null): Promise<Question[]> {
   const key = subjectKey(subject);
   if (loaded[key]) return Promise.resolve(loaded[key]!);
   if (!loading[key]) {
-    loading[key] = fetchJson<QuestionsFile>(DATA_BASE + `questions_${key}.json`)
-      .then((file) => {
-        // years 存在 list 脏值的历史数据，加载时统一归一化，保证组卷/排序/展示不崩
-        for (const q of file.questions) q.years = normalizeYears(q.years);
-        loaded[key] = file.questions;
-        return file.questions;
-      })
-      .finally(() => {
-        delete loading[key];
-      });
+    loading[key] = (async () => {
+      await loadManifest(); // 版本号就绪后，题目文件的持久缓存键才能区分新旧题库
+      const file = await fetchJson<QuestionsFile>(DATA_BASE + `questions_${key}.json`);
+      // years 存在 list 脏值的历史数据，加载时统一归一化，保证组卷/排序/展示不崩
+      for (const q of file.questions) q.years = normalizeYears(q.years);
+      loaded[key] = file.questions;
+      return file.questions;
+    })().finally(() => {
+      delete loading[key];
+    });
   }
   return loading[key]!;
 }

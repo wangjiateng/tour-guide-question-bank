@@ -172,8 +172,9 @@ function finished() {
         仅做有答案的题
       </label>
       <button :disabled="loading" @click="start">
-        {{ loading ? "加载中…" : "开始答题" }}
+        {{ loading ? "加载题库中…" : "开始答题" }}
       </button>
+      <p v-if="loading" class="hint">题库较大，首次加载需下载约十几 MB，请耐心等待；再次进入将秒开。</p>
       <p v-if="error" class="error">{{ error }}</p>
     </div>
 
@@ -240,6 +241,7 @@ function finished() {
 .setup > label { display: inline-flex; align-items: center; gap: 6px; }
 .setup > button { margin-left: auto; }
 .error { color: var(--bad); }
+.hint { color: var(--muted); font-size: 13px; margin: 4px 0 0; grid-column: 1 / -1; }
 .progress { color: var(--muted); margin-bottom: 8px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .subject-tag {
   font-size: 12px;

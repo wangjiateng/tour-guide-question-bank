@@ -61,6 +61,7 @@ npm run preview         # 预览构建产物 http://127.0.0.1:4173
 ## 4. 前端数据层（dataStore.ts）
 
 - 加载：`loadManifest()` / `loadSources()` / `loadSubjectQuestions(subject)`（懒加载+并发去重）；`loadSubjects([null,1..4])` 拼多科目
+- **持久缓存（组卷慢的解法）**：题目 JSON（全量约 14MB）经 Cache API 持久缓存，键含 `manifest.generated_at` 版本号，题库更新自动失效重下；刷新页面命中缓存秒开，环境不支持时静默降级纯网络。manifest 是版本源必须实时拉取（`cache:false`）；sources/questions 加载前先确保版本号就绪。主源与 jsDelivr CDN 并行竞速取最快，不再串行等超时
 - 组卷：`randomQuiz({size, answeredOnly, subject, sourceId, year})`；`queryQuestions({limit, offset, ...filters})`（浏览分页，年份降序）
 - 判分：`checkQuestion(q, given)` → `{question_id, correct, answer, explanation}`
 - 答题记录：`recordAttempt(q, selected, correct)` 存完整题目快照；`attempts()` 最新优先；`wrongPool({subject, offset, limit})` 错题池（答错去重、最近答错优先，错后答对仍在池）；`stats()` = manifest 静态数 + localStorage 动态数
