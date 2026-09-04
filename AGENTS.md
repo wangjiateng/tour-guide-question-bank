@@ -61,7 +61,7 @@ npm run preview         # 预览构建产物 http://127.0.0.1:4173
 ## 4. 前端数据层（dataStore.ts）
 
 - 加载：`loadManifest()` / `loadSources()` / `loadSubjectQuestions(subject)`（懒加载+并发去重）；`loadSubjects([null,1..4])` 拼多科目
-- **持久缓存（组卷慢的解法）**：题目 JSON（全量约 14MB）经 Cache API 持久缓存，键含 `manifest.generated_at` 版本号，题库更新自动失效重下；刷新页面命中缓存秒开，环境不支持时静默降级纯网络。manifest 是版本源必须实时拉取（`cache:false`）；sources/questions 加载前先确保版本号就绪。主源与 jsDelivr CDN 并行竞速取最快，不再串行等超时
+- **持久缓存（组卷慢的解法）**：题目 JSON（全量约 15MB）经 Cache API 持久缓存，键含 `manifest.generated_at` 版本号，题库更新自动失效重下；刷新页面命中缓存秒开，环境不支持时静默降级纯网络。manifest 是版本源必须实时拉取（`cache:false`）；sources/questions 加载前先确保版本号就绪。主源与 jsDelivr CDN 并行竞速取最快，不再串行等超时
 - 组卷：`randomQuiz({size, answeredOnly, subject, sourceId, year})`；`queryQuestions({limit, offset, ...filters})`（浏览分页，年份降序）
 - 判分：`checkQuestion(q, given)` → `{question_id, correct, answer, explanation}`
 - 答题记录：`recordAttempt(q, selected, correct)` 存完整题目快照；`attempts()` 最新优先；`wrongPool({subject, offset, limit})` 错题池（答错去重、最近答错优先，错后答对仍在池）；`stats()` = manifest 静态数 + localStorage 动态数
@@ -71,7 +71,7 @@ npm run preview         # 预览构建产物 http://127.0.0.1:4173
 
 - 参考答案归一化：判断题中文 `正确/错误` → `A/B`；其余大写
 - 多选：答案顺序无关（`AC` ≡ `CA`），判分用排序后比较
-- 笔试组卷：paper_type=1 科目一+二、2 科目三+四；题型题量 单选90+多选35+判断40（对齐 2025 官方大纲，库存充足，两卷均完整 165 题）；90 分钟；分值 单选0.5/多选1/判断0.5（满分 100）；**组卷近三年（2023-2025）真题优先（默认占比 30%，`RECENT_RATIO` 可调），其余由其他年份真题/无年份练习补足**
+- 笔试组卷：paper_type=1 科目一+二、2 科目三+四；题型题量 单选90+多选35+判断40（对齐 2025 官方大纲，库存充足，两卷均完整 165 题）；90 分钟；分值 单选0.5/多选1/判断0.5（满分 100）；**答题默认近三年真题 70% + 题引力新题 30%（`RECENT_RATIO=0.7`，未显式筛选时排除历史老题）；笔试保持只出近三年真题；笔试与随机答题组卷均按历史出现次数平衡（localStorage `daoyou_tiku_exam_appear_v1`，出现少的题优先、抽后计数+1）；浏览未指定年份默认只显示近三年**
 - Quiz/错题本判分返回**归一化字母**（判断题显示「参考答案：A」）；笔试单题判分返回**原始存储答案**（判断题显示「正确答案：正确」）——两者行为一致沿用，勿混改
 
 ### 前端路由（App.vue）
@@ -90,13 +90,14 @@ npm run preview         # 预览构建产物 http://127.0.0.1:4173
 | `manifest.json` | `{generated_at, total, answered, sources, per_subject}`（App 头部统计） |
 | `sources.json` | `{sources: [{id, url, title, kind, status, question_count, last_refresh_at, created_at}]}`（Quiz/Browse「来源」筛选） |
 | `questions_0.json` | 未分类题（subject NULL，fixture） |
-| `questions_1..4.json` | 按科目分文件（前端按需懒加载）——**全量题库（约 1.88 万题：历年真题 + 无年份练习）** |
+| `questions_1..4.json` | 按科目分文件（前端按需懒加载）——**全量题库（2026-09-04 爬虫丰富后约 1.98 万题）** |
 
-> **全量题库 + 近三年优先（2026-08-26）**：主库为全量题库（历年真题 + 无年份练习）；组卷/答题时近三年（2023-2025）真题优先，默认占比 30%（`RECENT_RATIO` 可调），其他年份真题与练习作为补充；浏览按年份降序。加新题：2021+ 或 无年份 → 主库常规录入即可。
+> **全量题库 + 爬虫丰富（2026-09-04）**：约 1.98 万题（历年真题 + 无年份练习 + 题引力 tiyinli 专题补充 1700+ 题，重点补强科目四地方知识）。答题默认近三年真题 70% + 题引力新题 30%（`RECENT_RATIO=0.7`），笔试只出近三年真题；浏览未指定年份默认只显示近三年（手动输入年份可看历年/新题）。全库 19760 题全部有答案有解析。全量数据回滚点：git tag `backup_full_18044_20260904`。加新题：对照现有 `question_text` 查重、保持 id 升序、更新 manifest 即可。
 
 题目字段（与 `src/types.ts` 的 `Question` 对齐）：
-`id / question_text / option_a..e / answer / explanation / subject / q_type / province / years / source_id / paper_title / source_url`
+`id / question_text / option_a..e / answer / explanation / subject / q_type / province / years / is_real_exam / source_id / paper_title / source_url`
 
+- **is_real_exam**：是否真题（true=官方历年真题：daoyouhome/hqwx/101贝考 真题源 42-44/50-56/66 + 考试酷历年卷 60-64；false=练习/模拟/章节/题引力专题 19/21/23/57/58/59/67）。前端答题/浏览可按下拉筛选「真题与练习/仅真题/仅练习」
 - **answer 原样保留**：判断题 `正确/错误`、多选字母串 `ABCD`——前端判分时映射，勿在数据侧归一化
 - **科目定义**：1 政策与法律法规 / 2 导游业务 / 3 全国导游基础知识 / 4 地方导游基础知识；`q_type`：1 单选 / 2 多选 / 3 判断
 - 维护约定：题目按 id 升序、时间戳只写 manifest（`generated_at`）；**加题前对照现有 JSON 的 `question_text` 查重**（JSON 无数据库级 UNIQUE 约束，靠 AI 把关）；编辑后更新 manifest 的 total/per_subject
@@ -135,7 +136,7 @@ npm run preview         # 预览构建产物 http://127.0.0.1:4173
 - 题目静态 JSON 随前端分发，答案对前端可见（本就无脱敏）；题库更新 = AI 直接编辑数据 JSON → 构建 → 部署
 - 年份覆盖 2003-2025（最新为 daoyouhome 真题 2023 40 题 / 2024 80 题 / 2025 138 题）；浏览默认按年份降序
 - 笔试两套卷判断题库存均充足（科目一+二 2487 道、科目三+四 2443 道），组卷完整 165 题 / 100 分
-- **全量题库 + 近三年优先（2026-08-26）**：主库为全量约 1.88 万题（历年真题 + 无年份练习）；组卷/答题近三年（2023-2025）真题优先（默认 30%，`RECENT_RATIO` 可调），其他年份真题与练习作为补充；历史备份 `data_legacy/`（约 1.7 万题）已于 2026-08-29 删除，需要时从 git 历史找回
+- **全量题库 + 爬虫丰富（2026-09-04）**：约 1.98 万题（2026-09-04 从题引力 tiyinli 全站 192 个真题专题抓取解析，新增约 1700 题，重点补强科目四地方知识）；答题默认近三年 70% + 题引力新题 30%（`RECENT_RATIO=0.7`），笔试只出近三年；浏览未指定年份默认只显示近三年；全库全部有答案有解析；全量回滚点 git tag `backup_full_18044_20260904`
 - 笔试 session 为内存态（`examSessions` Map）：刷新页面即失效，需重新组卷
 - 爬虫代码已全部移除；根目录 `CRAWLER_DATA.md` 保留爬虫侧数据定义作参考（其路径引用 `scripts/`、`frontend/` 为迁移中间态，与当前工作区不一致；若重建采集需同步更新）
 

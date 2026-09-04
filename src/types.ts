@@ -28,6 +28,8 @@ export interface Question {
   paper_title: string | null;
   province: string | null;
   years: string | null;
+  /** 是否真题（true=官方历年真题，false=练习/模拟/章节/专题题）。 */
+  is_real_exam: boolean;
   q_type: number | null;
   created_at: string;
 }

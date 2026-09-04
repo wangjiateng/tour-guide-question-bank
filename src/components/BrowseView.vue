@@ -15,6 +15,7 @@ const subjectFilter = ref<number | null>(props.subject ?? null);
 const provinceFilter = ref<string>("");
 const answeredFilter = ref<"" | "true" | "false">("");
 const yearFilter = ref<number | null>(null);
+const realExamFilter = ref<boolean | null>(null);
 const PROVINCES = [
   "北京", "天津", "上海", "重庆", "河北", "山西", "辽宁", "吉林", "黑龙江",
   "江苏", "浙江", "安徽", "福建", "江西", "山东", "河南", "湖北", "湖南",
@@ -42,6 +43,7 @@ async function load() {
       sourceId: sourceFilter.value,
       province: provinceFilter.value || undefined,
       year: yearFilter.value,
+      isRealExam: realExamFilter.value,
       answered: answeredFilter.value,
     });
     questions.value = data.questions;
@@ -106,6 +108,11 @@ onMounted(async () => {
           @change="offset = 0; load()"
         />
       </label>
+      <select v-model="realExamFilter" @change="offset = 0; load()">
+        <option :value="null">真题与练习</option>
+        <option :value="true">仅真题</option>
+        <option :value="false">仅练习</option>
+      </select>
     </div>
 
     <p v-if="error" class="error">{{ error }}</p>

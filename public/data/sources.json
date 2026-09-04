@@ -16,7 +16,7 @@
       "title": "6.29导游业务第1至第3章单选题",
       "kind": "examcoo",
       "status": "ready",
-      "question_count": 13,
+      "question_count": 3315,
       "last_refresh_at": "2026-08-17 06:53:35",
       "created_at": "2026-08-13 09:09:19"
     },
@@ -26,7 +26,7 @@
       "title": "《桂林渔鼓》知多少",
       "kind": "examcoo",
       "status": "ready",
-      "question_count": 248,
+      "question_count": 5883,
       "last_refresh_at": "2026-08-17 06:55:59",
       "created_at": "2026-08-13 09:15:21"
     },
@@ -36,7 +36,7 @@
       "title": "科目一+科目二模拟试卷第一套",
       "kind": "examcoo",
       "status": "ready",
-      "question_count": 119,
+      "question_count": 323,
       "last_refresh_at": "2026-08-17 06:56:05",
       "created_at": "2026-08-13 09:15:28"
     },
@@ -56,7 +56,7 @@
       "title": "2023年全国导游资格考试真题",
       "kind": "static_page",
       "status": "ready",
-      "question_count": 38,
+      "question_count": 37,
       "last_refresh_at": null,
       "created_at": "2026-08-14 08:05:43"
     },
@@ -66,7 +66,7 @@
       "title": "2024年全国导游资格考试真题",
       "kind": "static_page",
       "status": "ready",
-      "question_count": 80,
+      "question_count": 79,
       "last_refresh_at": null,
       "created_at": "2026-08-14 08:05:43"
     },
@@ -76,7 +76,7 @@
       "title": "2025年全国导游资格考试真题",
       "kind": "static_page",
       "status": "ready",
-      "question_count": 89,
+      "question_count": 86,
       "last_refresh_at": null,
       "created_at": "2026-08-14 08:05:43"
     },
@@ -106,7 +106,7 @@
       "title": "2024年全国导游资格考试真题（科目三+科目四）",
       "kind": "static_page",
       "status": "ready",
-      "question_count": 115,
+      "question_count": 101,
       "last_refresh_at": null,
       "created_at": "2026-08-25 22:20:00"
     },
@@ -126,7 +126,7 @@
       "title": "2025年全国导游资格考试真题（回忆版）",
       "kind": "static_page",
       "status": "ready",
-      "question_count": 13,
+      "question_count": 10,
       "last_refresh_at": null,
       "created_at": "2026-08-25 22:20:00"
     },
@@ -136,7 +136,7 @@
       "title": "2023年全国导游资格考试真题（科目三+科目四）完整版",
       "kind": "static_page",
       "status": "ready",
-      "question_count": 85,
+      "question_count": 83,
       "last_refresh_at": null,
       "created_at": "2026-08-25 23:00:00"
     },
@@ -156,7 +156,7 @@
       "title": "2026年全国导游资格考试模拟卷-tour-guide-trainer",
       "kind": "static_page",
       "status": "ready",
-      "question_count": 0,
+      "question_count": 147,
       "last_refresh_at": null,
       "created_at": "2026-08-25 23:00:00"
     },
@@ -166,7 +166,7 @@
       "title": "全国导游资格考试原创练习题-tour-guide-trainer",
       "kind": "static_page",
       "status": "ready",
-      "question_count": 96,
+      "question_count": 92,
       "last_refresh_at": null,
       "created_at": "2026-08-25 23:00:00"
     },
@@ -176,7 +176,7 @@
       "title": "导游资格考试练习系统题库-daoyou-exam",
       "kind": "static_page",
       "status": "ready",
-      "question_count": 263,
+      "question_count": 285,
       "last_refresh_at": null,
       "created_at": "2026-08-25 23:00:00"
     },
@@ -186,7 +186,7 @@
       "title": "考试酷-旅游方针政策与法规试卷全量（2004-2019）",
       "kind": "examcoo",
       "status": "ready",
-      "question_count": 78,
+      "question_count": 3587,
       "last_refresh_at": null,
       "created_at": "2026-08-25 23:40:00"
     },
@@ -196,7 +196,7 @@
       "title": "考试酷-导游业务试卷全量（2004-2019）",
       "kind": "examcoo",
       "status": "ready",
-      "question_count": 1,
+      "question_count": 1170,
       "last_refresh_at": null,
       "created_at": "2026-08-25 23:40:00"
     },
@@ -206,7 +206,7 @@
       "title": "考试酷-导游基础知识试卷全量（2004-2019）",
       "kind": "examcoo",
       "status": "ready",
-      "question_count": 11,
+      "question_count": 1971,
       "last_refresh_at": null,
       "created_at": "2026-08-25 23:40:00"
     },
@@ -216,7 +216,7 @@
       "title": "考试酷-汉语言文学基础试卷全量",
       "kind": "examcoo",
       "status": "ready",
-      "question_count": 0,
+      "question_count": 137,
       "last_refresh_at": null,
       "created_at": "2026-08-25 23:40:00"
     },
@@ -226,7 +226,7 @@
       "title": "考试酷-导游规范服务能力试卷全量",
       "kind": "examcoo",
       "status": "ready",
-      "question_count": 40,
+      "question_count": 88,
       "last_refresh_at": null,
       "created_at": "2026-08-25 23:40:00"
     },
@@ -236,7 +236,7 @@
       "title": "2025年导游资格证笔试真题（考生回忆版）-101贝考",
       "kind": "static_page",
       "status": "ready",
-      "question_count": 264,
+      "question_count": 235,
       "last_refresh_at": null,
       "created_at": "2026-08-26 00:10:00"
     },
@@ -246,7 +246,7 @@
       "title": "题引力导游真题（历年考题/专题）",
       "kind": "static_page",
       "status": "ready",
-      "question_count": 134,
+      "question_count": 1848,
       "last_refresh_at": null,
       "created_at": "2026-08-26 12:28:12"
     }

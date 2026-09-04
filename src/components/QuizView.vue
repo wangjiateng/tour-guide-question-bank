@@ -21,6 +21,7 @@ const checking = ref(false);
 const subjectFilter = ref<number | null>(props.subject ?? null);
 const sourceFilter = ref<number | null>(null);
 const yearFilter = ref<number | null>(null);
+const realExamFilter = ref<boolean | null>(null);
 const YEAR_OPTIONS = [2019, 2018, 2017, 2016, 2015, 2014, 2013, 2012, 2011, 2010];
 const sources = ref<Source[]>([]);
 
@@ -52,6 +53,7 @@ async function start() {
       subject: subjectFilter.value,
       sourceId: sourceFilter.value,
       year: yearFilter.value,
+      isRealExam: realExamFilter.value,
     });
     if (questions.value.length === 0) {
       error.value = "没有符合筛选条件的题目";
@@ -165,6 +167,14 @@ function finished() {
         <select v-model="yearFilter">
           <option :value="null">全部年份</option>
           <option v-for="y in YEAR_OPTIONS" :key="y" :value="y">{{ y }} 年</option>
+        </select>
+      </label>
+      <label>
+        类型
+        <select v-model="realExamFilter">
+          <option :value="null">真题与练习</option>
+          <option :value="true">仅真题</option>
+          <option :value="false">仅练习</option>
         </select>
       </label>
       <label>

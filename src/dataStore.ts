@@ -281,19 +281,26 @@ export interface QuizOptions {
   subject?: number | null;
   sourceId?: number | null;
   year?: number | null;
+  /** true=仅真题，false=仅练习，null=全部 */
+  isRealExam?: boolean | null;
 }
 
 function matchesYear(years: string | null, year: number): boolean {
   return years != null && years.split(",").map(Number).includes(year);
 }
 
-/** 近三年（2023-2025）真题：组卷/答题优先出题，其他年份真题与无年份练习作为补充。 */
+/** 近三年（2023-2025）真题：在线答题优先出题。 */
 const RECENT_YEARS = new Set(["2023", "2024", "2025"]);
-/** 近三年题在组卷中的目标占比（其余由其他年份/无年份题补足）。 */
-const RECENT_RATIO = 0.3;
+/** 在线答题中近三年真题的目标占比（0.7 = 近三年 70% + 题引力新题等补充 30%）。 */
+const RECENT_RATIO = 0.7;
 
 function isRecent(q: Question): boolean {
   return (q.years ?? "").split(",").some((y) => RECENT_YEARS.has(y.trim()));
+}
+
+/** 题引力（tiyinli）专题题：作为近三年之外的高质量补充练习（带答案解析，与历史老题不同）。 */
+function isSupplement(q: Question): boolean {
+  return q.source_id === 67;
 }
 
 /** Fisher-Yates 洗牌（返回新数组）。 */
@@ -306,25 +313,81 @@ function shuffle<T>(arr: T[]): T[] {
   return out;
 }
 
-/** 近三年优先取题：先从近三年池抽（目标占比），不足用其他池补足。 */
-function pickWeighted<T>(pool: T[], size: number, recent: (t: T) => boolean): T[] {
-  const recentPool = shuffle(pool.filter(recent));
-  const restPool = shuffle(pool.filter((t) => !recent(t)));
-  const nRecent = Math.min(recentPool.length, Math.round(size * RECENT_RATIO));
-  const out = recentPool.slice(0, nRecent);
-  if (out.length < size) out.push(...restPool.slice(0, size - out.length));
+// ---------------------------------------------------------------------------
+// 组卷出现次数平衡：localStorage 记录每题被组卷抽中的次数，抽题时出现少的优先
+// ---------------------------------------------------------------------------
+
+const APPEAR_KEY = "daoyou_tiku_exam_appear_v1";
+
+function readAppear(): Map<number, number> {
+  try {
+    const raw = localStorage.getItem(APPEAR_KEY);
+    if (!raw) return new Map();
+    const obj = JSON.parse(raw) as Record<string, number>;
+    const m = new Map<number, number>();
+    for (const [k, v] of Object.entries(obj)) {
+      if (typeof v === "number") m.set(Number(k), v);
+    }
+    return m;
+  } catch {
+    return new Map();
+  }
+}
+
+function writeAppear(m: Map<number, number>): void {
+  try {
+    const obj: Record<string, number> = {};
+    for (const [k, v] of m) obj[String(k)] = v;
+    localStorage.setItem(APPEAR_KEY, JSON.stringify(obj));
+  } catch {
+    // 存储满/隐私模式：静默失败，仅本次组卷不持久化
+  }
+}
+
+/** 按历史出现次数平衡取题：出现次数少的优先（组内随机），使每题被抽中频率趋于均衡。 */
+function pickBalanced<T extends { id: number }>(
+  pool: T[],
+  size: number,
+  appear: Map<number, number>,
+): T[] {
+  const byCount = new Map<number, T[]>();
+  for (const t of pool) {
+    const c = appear.get(t.id) ?? 0;
+    const arr = byCount.get(c);
+    if (arr) arr.push(t);
+    else byCount.set(c, [t]);
+  }
+  const out: T[] = [];
+  for (const c of [...byCount.keys()].sort((a, b) => a - b)) {
+    if (out.length >= size) break;
+    out.push(...shuffle(byCount.get(c)!).slice(0, size - out.length));
+  }
   return out;
 }
 
-/** 随机抽题：近三年（2023-2025）真题优先（目标占比 70%），其余由其他年份/无年份题补足。 */
+/** 随机抽题：近三年（2023-2025）真题优先（默认 70%），其余由题引力新题等补充；未显式筛选来源/年份时排除历史老题与旧练习。 */
 export async function randomQuiz(opts: QuizOptions): Promise<Question[]> {
-  const { size, answeredOnly, subject, sourceId, year } = opts;
+  const { size, answeredOnly, subject, sourceId, year, isRealExam } = opts;
   const subjects = subject == null ? [null, 1, 2, 3, 4] : [subject];
   let pool = await loadSubjects(subjects);
   if (answeredOnly) pool = pool.filter((q) => q.answer);
   if (sourceId != null) pool = pool.filter((q) => q.source_id === sourceId);
   if (year != null) pool = pool.filter((q) => matchesYear(q.years, year));
-  return pickWeighted(pool, Math.min(size, pool.length), isRecent);
+  if (isRealExam != null) pool = pool.filter((q) => q.is_real_exam === isRealExam);
+  // 未显式筛选来源/年份：只从"近三年真题 + 题引力新题"出题，避免历史老题与旧无年份练习
+  if (sourceId == null && year == null) pool = pool.filter((q) => isRecent(q) || isSupplement(q));
+  const appear = readAppear();
+  const n = Math.min(size, pool.length);
+  const recent = pool.filter(isRecent);
+  const rest = pool.filter((q) => !isRecent(q));
+  const nRecent = Math.min(recent.length, Math.round(n * RECENT_RATIO));
+  const out = [
+    ...pickBalanced(recent, nRecent, appear),
+    ...pickBalanced(rest, n - nRecent, appear),
+  ];
+  for (const q of out) appear.set(q.id, (appear.get(q.id) ?? 0) + 1);
+  writeAppear(appear);
+  return out;
 }
 
 /** 浏览：过滤 + 分页，按年份降序（移植自 /api/questions）。 */
@@ -335,14 +398,16 @@ export async function queryQuestions(opts: {
   sourceId?: number | null;
   province?: string;
   year?: number | null;
+  isRealExam?: boolean | null;
   answered?: "" | "true" | "false";
 }): Promise<{ total: number; questions: Question[] }> {
-  const { limit, offset, sourceId, province, year, answered } = opts;
+  const { limit, offset, sourceId, province, year, isRealExam, answered } = opts;
   const subjects = opts.subject == null ? [null, 1, 2, 3, 4] : [opts.subject];
   let pool = await loadSubjects(subjects);
   if (sourceId != null) pool = pool.filter((q) => q.source_id === sourceId);
   if (province) pool = pool.filter((q) => q.province?.includes(province));
   if (year != null) pool = pool.filter((q) => matchesYear(q.years, year));
+  if (isRealExam != null) pool = pool.filter((q) => q.is_real_exam === isRealExam);
   if (answered === "true") pool = pool.filter((q) => q.answer);
   if (answered === "false") pool = pool.filter((q) => !q.answer);
   pool = pool.sort((a, b) => (b.years ?? "").localeCompare(a.years ?? "") || b.id - a.id);
@@ -468,17 +533,26 @@ const examSessions = new Map<string, ExamSession>();
 export async function examPaper(paperType: number): Promise<ExamPaper> {
   const paper = EXAM_PAPERS[paperType];
   const pool = await loadSubjects(paper.subjects);
+  const appear = readAppear();
   const picked: Question[] = [];
   const typeCounts: Record<string, number> = {};
   for (const [qType, want] of EXAM_TYPE_COUNTS) {
     const candidates = pool.filter(
       (q) => q.q_type === qType && q.answer && paper.subjects.includes(q.subject ?? -1),
     );
-    // 近三年真题优先取 want 道（不足用其他年份/无年份题补足，受库存上限）
-    const chosen = pickWeighted(candidates, want, isRecent);
+    // 笔试保持只出近三年真题（不足才补），模拟真实考试；组内按历史出现次数平衡抽取
+    const recent = candidates.filter(isRecent);
+    const rest = candidates.filter((q) => !isRecent(q));
+    const chosen = [
+      ...pickBalanced(recent, Math.min(want, recent.length), appear),
+      ...pickBalanced(rest, want - Math.min(want, recent.length), appear),
+    ];
     picked.push(...chosen);
     typeCounts[qType] = chosen.length;
   }
+  // 记录本次组卷各题出现次数，用于平衡后续组卷
+  for (const q of picked) appear.set(q.id, (appear.get(q.id) ?? 0) + 1);
+  writeAppear(appear);
   const paperId = `p${Date.now()}${Math.random().toString(36).slice(2, 8)}`;
   examSessions.set(paperId, { questions: picked });
   const questions: ExamQuestion[] = picked.map((q) => ({
