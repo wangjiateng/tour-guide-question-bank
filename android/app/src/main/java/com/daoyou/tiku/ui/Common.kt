@@ -1,0 +1,263 @@
+package com.daoyou.tiku.ui
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import com.daoyou.tiku.data.Question
+
+/** 科目常量（与题库数据约定一致）。 */
+object Subjects {
+    val NAMES = mapOf(1 to "政策与法律法规", 2 to "导游业务", 3 to "全国导游基础知识", 4 to "地方导游基础知识")
+    fun name(s: Int?): String = NAMES[s] ?: "未分类"
+}
+
+/** 题型常量：1 单选 / 2 多选 / 3 判断。 */
+object QTypes {
+    fun name(t: Int?): String = when (t) {
+        1 -> "单选"
+        2 -> "多选"
+        3 -> "判断"
+        else -> "单选"
+    }
+
+    fun label(t: Int?): String = when (t) {
+        1 -> "单选题"
+        2 -> "多选题"
+        3 -> "判断题"
+        else -> "单选题"
+    }
+}
+
+/** 判断题选项字母 → 文案（归一化答案 A/B 对应 正确/错误）。 */
+fun optionLabel(q: Question, letter: String): String = when (letter) {
+    "A" -> if (q.qType == 3) "A 正确" else "A ${q.optionA.orEmpty()}"
+    "B" -> if (q.qType == 3) "B 错误" else "B ${q.optionB.orEmpty()}"
+    "C" -> "C ${q.optionC.orEmpty()}"
+    "D" -> "D ${q.optionD.orEmpty()}"
+    "E" -> "E ${q.optionE.orEmpty()}"
+    else -> letter
+}
+
+/** 科目过滤条（全局 activeSubject 共用）。 */
+@Composable
+fun SubjectFilterBar(activeSubject: Int?, onChange: (Int?) -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 6.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        val items: List<Pair<Int?, String>> =
+            listOf(null to "全部") + Subjects.NAMES.map { (k, v) -> k to v }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            items.take(3).forEach { (k, label) ->
+                FilterPill(label, activeSubject == k, Modifier.weight(1f)) { onChange(k) }
+            }
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            items.drop(3).forEach { (k, label) ->
+                FilterPill(label, activeSubject == k, Modifier.weight(1f)) { onChange(k) }
+            }
+        }
+    }
+}
+
+/** 可点选的小药丸标签。 */
+@Composable
+fun FilterPill(label: String, selected: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    Box(
+        modifier = modifier
+            .background(
+                color = if (selected) MaterialTheme.colorScheme.primary
+                else MaterialTheme.colorScheme.surfaceVariant,
+                shape = RoundedCornerShape(16.dp),
+            )
+            .clickable { onClick() }
+            .padding(horizontal = 10.dp, vertical = 8.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodySmall,
+            color = if (selected) MaterialTheme.colorScheme.onPrimary
+            else MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+        )
+    }
+}
+
+/** 题目元信息行：科目 / 题型 / 年份 / 真题标记。 */
+@Composable
+fun QuestionMeta(q: Question) {
+    val tags = buildList {
+        add(Subjects.name(q.subject))
+        add(QTypes.label(q.qType))
+        q.years?.let { add("$it 年") }
+        if (q.isRealExam == true) add("真题")
+    }
+    Text(
+        text = tags.joinToString(" · "),
+        style = MaterialTheme.typography.labelSmall,
+        color = MaterialTheme.colorScheme.outline,
+    )
+}
+
+/**
+ * 题目卡：题干 + 选项 + （揭示后）答案与解析。
+ * selected：当前所选（多选为字母集合拼接）；revealed：是否已判分。
+ * 多选/判断判分由调用方完成，这里只负责展示。
+ */
+@Composable
+fun QuestionCard(
+    q: Question,
+    selected: Set<String>,
+    revealed: Boolean,
+    correctRef: String,
+    explanation: String?,
+    onSelect: (String) -> Unit,
+    /** 判定后展示的答案文本（笔试传原始存储答案：判断题「正确/错误」）；null 时按归一化字母推导。 */
+    answerDisplay: String? = null,
+    /** 已判定后是否允许改选（笔试可改答案重判，对齐 web 端）。 */
+    allowReanswer: Boolean = false,
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+    ) {
+        Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            QuestionMeta(q)
+            Text(
+                text = q.questionText,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Medium,
+            )
+            val letters = listOf("A", "B", "C", "D", "E").filter { letter ->
+                when (letter) {
+                    "A" -> q.optionA != null || q.qType == 3
+                    "B" -> q.optionB != null || q.qType == 3
+                    "C" -> q.optionC != null
+                    "D" -> q.optionD != null
+                    "E" -> q.optionE != null
+                    else -> false
+                }
+            }
+            letters.forEach { letter ->
+                val isChosen = letter in selected
+                val isRef = correctRef.contains(letter)
+                val bg = when {
+                    revealed && isRef -> Color(0xFFC8E6C9)
+                    revealed && isChosen && !isRef -> Color(0xFFFFCDD2)
+                    isChosen -> MaterialTheme.colorScheme.primaryContainer
+                    else -> MaterialTheme.colorScheme.surfaceVariant
+                }
+                val fg = if (revealed && (isRef || (isChosen && !isRef))) Color(0xFF1B1B1B)
+                else if (isChosen) MaterialTheme.colorScheme.onPrimaryContainer
+                else MaterialTheme.colorScheme.onSurfaceVariant
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(bg, RoundedCornerShape(10.dp))
+                        .clickable(enabled = !revealed || allowReanswer) { onSelect(letter) }
+                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                ) {
+                    Text(text = optionLabel(q, letter), style = MaterialTheme.typography.bodyMedium, color = fg)
+                }
+            }
+            if (revealed) {
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    text = "参考答案：${answerDisplay ?: (if (q.qType == 3) (if (correctRef == "A") "正确" else "错误") else correctRef)}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+                if (!explanation.isNullOrEmpty()) {
+                    Text(
+                        text = "解析：$explanation",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+        }
+    }
+}
+
+/** 可展开的浏览题卡（默认收起，点开展开选项/答案/解析）。 */
+@Composable
+fun BrowseQuestionCard(q: Question) {
+    var expanded by remember { mutableStateOf(false) }
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { expanded = !expanded },
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+    ) {
+        Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            QuestionMeta(q)
+            Text(q.questionText, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
+            if (expanded) {
+                val ref = com.daoyou.tiku.logic.Grading.refAnswer(q)
+                q.options.forEachIndexed { idx, opt ->
+                    val letter = ('A' + idx).toString()
+                    val isRef = ref.contains(letter)
+                    Text(
+                        text = optionLabel(q, letter).ifEmpty { opt },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (isRef) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontWeight = if (isRef) FontWeight.SemiBold else FontWeight.Normal,
+                    )
+                }
+                Text(
+                    text = "参考答案：${if (q.qType == 3) (if (ref == "A") "正确" else "错误") else ref}",
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+                if (!q.explanation.isNullOrEmpty()) {
+                    Text(
+                        text = "解析：${q.explanation}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            } else {
+                Text(
+                    text = "点击展开选项与答案",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.outline,
+                )
+            }
+        }
+    }
+}

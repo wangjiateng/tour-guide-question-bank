@@ -7,3 +7,4 @@ tsconfig.tsbuildinfo
 .loopx/
 .codex/
 .pi/
+.vscode/

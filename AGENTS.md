@@ -176,3 +176,20 @@ python3 scripts/dedup/dedup_pipeline.py --apply     # 执行并写回
 # 注意：ocr_fixes.json 是去重专用 OCR 错字词典，添加映射会让更多文本判为相同，务必高置信度才加
 # 去重率口径：原始采集量（各源抓取原始题量之和）→ 最终题库，整体去重率约 50%
 ```
+
+
+## 12. APK 安卓客户端（原生 Kotlin + Compose）
+
+- **纯原生实现**：Kotlin 2.2 + Jetpack Compose + Material 3，工程在 `android/` 目录（2026-09-09 曾短暂使用 Capacitor 壳方案，真机体验不佳，已整体替换为原生）
+- **数据离线内置**：Gradle 任务 `copyQuizData` 构建时把 `public/data/`（唯一事实源，AI 直接维护）复制进 assets；副本不入 git（`android/.gitignore` 已排除）；APK 完全离线可用，无网络请求
+- **逻辑移植**：`android/app/src/main/java/com/daoyou/tiku/logic/` 判分/组卷严格对齐 web 端 dataStore.ts——判断题中文归一化 A/B、多选无序比较、近三年 70% + 题引力(source_id=67)补充、笔试 90+35+40 题型分值 0.5/1/0.5、组卷出现次数平衡；**判分约定是前后端强耦合红线，两侧改必须同步**
+- **原生端增强（web 端无此行为）**：笔试判错的题即收进错题本（答对不记，避免整卷污染答题历史）；组卷 `pickBalanced` 对错题加权（出现次数等效减一，优先抽中重现）；错题毕业机制：最后一次答错后连续答对 5 次（`RecordsStore.GRADUATE_STREAK`）即移出错题本与组卷加权，错题在笔试中答对也单独记录以推进计数；随机答题近三年占比原生端为 50/50（`QuizBuilder.RECENT_RATIO=0.5`），web 端仍 70/30
+- **记录持久化**：`data/RecordsStore.kt` 存应用私有 `files/records.json`（答题历史/错题本）与 `appear.json`（组卷计数），替代 web 的 localStorage
+- **UI**：`ui/` 五视图（答题/笔试/浏览/错题/历史）+ 底部导航，科目过滤为全局状态
+- 一键构建：`npm run apk`（= `cd android && JAVA_HOME=/iCoding/java/jdk-21 ./gradlew assembleDebug`），产物 `android/app/build/outputs/apk/debug/app-debug.apk`（约 18.5MB，minSdk 24 / targetSdk 36）
+- 前置：JDK 21（`/iCoding/java/jdk-21`）+ Android SDK（`/opt/android-sdk`，写 `android/local.properties`）；web 版构建 `npm run build` 与原生构建互不影响
+- 本机构建环境要点：
+  - `JAVA_HOME` 默认指向 Java 8（/iCoding/java/jdk8u242-b08）会弄挂 gradle/sdkmanager，构建前切 JDK 21；sdkmanager 用 JDK 17 且需 `--sdk_root=/opt/android-sdk`
+  - Gradle 发行版官方源跳 GitHub 资产超时，wrapper 已改腾讯镜像（`android/gradle/wrapper/gradle-wrapper.properties`）
+  - 全局 `~/.gradle/init.gradle` 预设百度内网 Maven 镜像（HTTP 明文，已加 `allowInsecureProtocol = true` 放行）
+- **Kotlin 注释嵌套陷阱**：Kotlin 块注释支持嵌套，注释里写 `data/*.json` 这类含 `/*` 序列的文本会导致「Unclosed comment」编译错，注释中避免 `/*` 字符序列

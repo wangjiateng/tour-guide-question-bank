@@ -1,0 +1,11 @@
+# Gradle / Android 构建产物
+.gradle/
+build/
+local.properties
+
+# 构建时由 copyQuizData 任务从 public/data/ 复制（唯一事实源在仓库根 public/data，不入库副本）
+app/src/main/assets/data/
+
+# IDE
+.idea/
+*.iml
