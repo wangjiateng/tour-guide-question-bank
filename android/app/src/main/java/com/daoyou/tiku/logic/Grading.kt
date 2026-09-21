@@ -3,7 +3,7 @@ package com.daoyou.tiku.logic
 import com.daoyou.tiku.data.Question
 import kotlinx.serialization.Serializable
 
-/** 判分结果（对齐 web 端 CheckResult）。 */
+/** 判分结果。 */
 @Serializable
 data class CheckResult(
     @kotlinx.serialization.SerialName("question_id") val questionId: Long,
@@ -13,7 +13,7 @@ data class CheckResult(
 )
 
 /**
- * 判分逻辑，严格移植自 web 端 dataStore.ts（前端强耦合红线，勿混改）：
+ * 判分逻辑（强耦合红线，勿混改）：
  * - 参考答案归一化：判断题中文「正确/错误」→ A/B，其余大写
  * - 多选答案顺序无关（"AC" ≡ "CA"）
  * - Quiz/错题本判分返回归一化字母；笔试判分返回原始存储答案（见 ExamEngine）

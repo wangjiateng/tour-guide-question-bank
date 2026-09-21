@@ -5,9 +5,10 @@ import com.daoyou.tiku.data.QuestionRepository
 import com.daoyou.tiku.data.RecordsStore
 import kotlin.random.Random
 
-/** 组卷选项（对齐 web 端 QuizOptions）。 */
+/** 组卷选项。 */
 data class QuizOptions(
-    val size: Int,
+    /** 题量；null = 不限题量（出全池）。 */
+    val size: Int?,
     val answeredOnly: Boolean,
     val subject: Int? = null,
     val sourceId: Long? = null,
@@ -17,15 +18,14 @@ data class QuizOptions(
 )
 
 /**
- * 组卷逻辑，严格移植自 web 端 dataStore.ts：
- * - 近三年（2023-2025）真题 50% + 题引力新题（source_id=67）等补充 50%（原生端 55 开；web 端仍 70/30，两侧差异见 AGENTS.md）
+ * 组卷逻辑：
+ * - 真题优先：真题占比更高，且与题引力新题（source_id=67）等补充题按比例交错混排（题型全程混合）
  * - 未显式筛选来源/年份时排除历史老题与旧练习
- * - 按历史出现次数平衡抽取（出现少的题优先，抽后计数 +1）
+ * - 组内按历史出现次数平衡抽取（出现少的题优先，抽后计数 +1）
  */
 object QuizBuilder {
 
     private val RECENT_YEARS = setOf("2023", "2024", "2025")
-    private const val RECENT_RATIO = 0.5
 
     fun isRecent(q: Question): Boolean =
         (q.years ?: "").split(",").any { it.trim() in RECENT_YEARS }
@@ -56,11 +56,29 @@ object QuizBuilder {
         return out
     }
 
+    /** 按剩余比例平滑交错两列表（真题/补充混合排布，保持整体密度均匀）。 */
+    private fun <T> interleave(a: List<T>, b: List<T>): List<T> {
+        val out = ArrayList<T>(a.size + b.size)
+        var i = 0
+        var j = 0
+        while (i < a.size || j < b.size) {
+            when {
+                i >= a.size -> { out.add(b[j]); j++ }
+                j >= b.size -> { out.add(a[i]); i++ }
+                (i + 1).toDouble() / a.size <= (j + 1).toDouble() / b.size -> { out.add(a[i]); i++ }
+                else -> { out.add(b[j]); j++ }
+            }
+        }
+        return out
+    }
+
     /** 随机抽题（在线答题）。 */
     suspend fun randomQuiz(opts: QuizOptions): List<Question> {
         val subjects = if (opts.subject == null) listOf<Int?>(null, 1, 2, 3, 4) else listOf<Int?>(opts.subject)
         var pool = QuestionRepository.loadSubjects(subjects)
         if (opts.answeredOnly) pool = pool.filter { !it.answer.isNullOrEmpty() }
+        // 选项缺失的题无法作答：单选/多选至少要有 2 个可渲染选项（判断题 A/B 自动合成，豁免）
+        pool = pool.filter { it.qType == 3 || it.options.size >= 2 }
         if (opts.sourceId != null) pool = pool.filter { it.sourceId == opts.sourceId }
         if (opts.year != null) pool = pool.filter { matchesYear(it.years, opts.year) }
         if (opts.isRealExam != null) pool = pool.filter { it.isRealExam == opts.isRealExam }
@@ -68,16 +86,21 @@ object QuizBuilder {
         if (opts.sourceId == null && opts.year == null) {
             pool = pool.filter { isRecent(it) || isSupplement(it) }
         }
-        val n = minOf(opts.size, pool.size)
-        val recent = pool.filter { isRecent(it) }
-        val rest = pool.filter { !isRecent(it) }
-        val nRecent = minOf(recent.size, Math.round(n * RECENT_RATIO).toInt())
-        val out = pickBalanced(recent, nRecent) + pickBalanced(rest, n - nRecent)
+        // 真题优先：真题占比更高，但与补充题按比例交错混合——
+        // 两块各自打散后交错，避免试卷级/计数级的题型整段聚集
+        val real = pool.filter { it.isRealExam == true }
+        val rest = pool.filter { it.isRealExam != true }
+        val n = if (opts.size == null) pool.size else minOf(opts.size, pool.size)
+        val nReal = minOf(real.size, n)
+        val out = interleave(
+            pickBalanced(real, nReal).shuffled(),
+            pickBalanced(rest, n - nReal).shuffled(),
+        )
         RecordsStore.bumpAppear(out.map { it.id })
         return out
     }
 
-    /** 浏览：过滤 + 分页，按年份降序（对齐 web 端 queryQuestions）。 */
+    /** 浏览：过滤 + 分页，按年份降序。（浏览页已移除，保留备用） */
     suspend fun queryQuestions(
         subject: Int? = null,
         sourceId: Long? = null,

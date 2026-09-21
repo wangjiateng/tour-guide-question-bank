@@ -28,7 +28,7 @@ from collections import defaultdict
 from difflib import SequenceMatcher
 
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-DATA = os.path.join(REPO, 'public', 'data')
+DATA = os.path.join(REPO, 'data')
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 REPORT_DIR = os.path.join(SCRIPT_DIR, 'reports')
 
@@ -365,7 +365,7 @@ def main():
         final = [q for idx, q in enumerate(remain) if idx not in stage2_remove and id(q) not in stage4_remove]
         assert len(final) == report['total_after']
         save_all(final)
-        print('\n已写回数据文件。请更新 manifest.json 计数并 npm run build。')
+        print('\n已写回数据文件。请更新 manifest.json 计数，然后 cd android && ./gradlew assembleDebug 重新构建 APK。')
     else:
         print('\nDRY-RUN 完成，未修改任何文件。确认后加 --apply 执行。')
 

@@ -25,8 +25,7 @@ val quizJson: Json = Json { ignoreUnknownKeys = true; isLenient = true }
 
 /**
  * years 字段历史数据存在脏值（list 如 ['0','1','2023'] 或逗号串），统一归一化为
- * 逗号分隔的 4 位年份串（仅保留合法年份），保证下游 split(",") 安全——与 web 端
- * dataStore.normalizeYears 行为一致。
+ * 逗号分隔的 4 位年份串（仅保留合法年份），保证下游 split(",") 安全。
  */
 object FlexibleYearsSerializer : KSerializer<String?> {
     override val descriptor: SerialDescriptor =
@@ -49,7 +48,7 @@ object FlexibleYearsSerializer : KSerializer<String?> {
 }
 
 /**
- * 题目模型，字段与 web 端 src/types.ts 的 Question 对齐（public/data 目录 JSON 唯一事实源）。
+ * 题目模型，字段与仓库根 data/ 目录的题库 JSON（唯一事实源）对齐。
  * answer 原样保留：判断题中文「正确/错误」、多选字母串——判分时归一化，勿在数据侧改动。
  */
 @Serializable
@@ -72,9 +71,10 @@ data class Question(
     @SerialName("paper_title") val paperTitle: String? = null,
     @SerialName("source_url") val sourceUrl: String? = null,
 ) {
-    /** 选项列表：A-E 过滤空值，与 web 端 ExamQuestion.options 一致。 */
+    /** 选项列表：A-E 过滤空值与空串（历史数据存在 option_x="" 的脏值）。 */
     val options: List<String>
         get() = listOfNotNull(optionA, optionB, optionC, optionD, optionE)
+            .filter { it.isNotBlank() }
 }
 
 /** manifest.json：统计信息 + generated_at 版本号。 */

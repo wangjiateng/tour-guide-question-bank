@@ -6,8 +6,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.List
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -24,19 +22,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 
-/** 底部导航五个视图，与 web 端 App.vue 的 5 视图对齐。 */
+/** 底部导航三个视图。 */
 enum class Tab(val label: String, val icon: ImageVector) {
     QUIZ("答题", Icons.Filled.Edit),
     EXAM("笔试", Icons.Filled.Home),
-    BROWSE("浏览", Icons.Filled.Search),
     WRONG("错题", Icons.Filled.Warning),
-    HISTORY("历史", Icons.Filled.List),
 }
 
 @Composable
 fun DaoyouApp() {
     var tab by remember { mutableStateOf(Tab.QUIZ) }
-    // 科目过滤为全局状态（对齐 web 端 App.vue 层 activeSubject），答题/浏览/错题共用
+    // 科目过滤为全局状态，答题/浏览/错题共用
     var activeSubject by remember { mutableStateOf<Int?>(null) }
 
     Scaffold(
@@ -59,8 +55,8 @@ fun DaoyouApp() {
                 .fillMaxSize()
                 .padding(padding),
         ) {
-            // 笔试模拟有自己的卷型选择，不需要全局科目条
-            if (tab != Tab.EXAM) {
+            // 笔试有自己的卷型选择，答题页有页内科目药丸，均不需要全局科目条
+            if (tab == Tab.WRONG) {
                 SubjectFilterBar(
                     activeSubject = activeSubject,
                     onChange = { activeSubject = it },
@@ -69,9 +65,7 @@ fun DaoyouApp() {
             when (tab) {
                 Tab.QUIZ -> QuizScreen(activeSubject)
                 Tab.EXAM -> ExamScreen()
-                Tab.BROWSE -> BrowseScreen(activeSubject)
                 Tab.WRONG -> WrongScreen(activeSubject)
-                Tab.HISTORY -> HistoryScreen()
             }
         }
     }

@@ -5,7 +5,7 @@ import com.daoyou.tiku.data.QuestionRepository
 import com.daoyou.tiku.data.RecordsStore
 import kotlinx.serialization.Serializable
 
-/** 笔试单题（脱敏：不含答案，对齐 web 端 ExamQuestion）。 */
+/** 笔试单题（脱敏：不含答案）。 */
 @Serializable
 data class ExamQuestion(
     val id: Long,
@@ -29,7 +29,7 @@ data class ExamPaper(
     val questions: List<ExamQuestion>,
 )
 
-/** 逐题判定结果（笔试：answer 返回原始存储答案，与 web 行为一致勿混改）。 */
+/** 逐题判定结果（笔试：answer 返回原始存储答案，勿混改）。 */
 @Serializable
 data class ExamCheckResult(
     @kotlinx.serialization.SerialName("question_id") val questionId: Long,
@@ -52,11 +52,11 @@ data class ExamResult(
 }
 
 /**
- * 笔试模拟引擎，移植自 web 端 dataStore.ts：
+ * 笔试模拟引擎：
  * - paper_type=1 科目一+二、2 科目三+四
  * - 题型题量 单选90+多选35+判断40（2025 官方大纲），90 分钟
  * - 分值 单选0.5/多选1/判断0.5（满分 100）
- * - 只出近三年真题（不足才补）；组内按历史出现次数平衡抽取
+ * - 近三年真题优先 60% + 历史真题补齐 40%（历史真题不足时从近三年补足）；组内按历史出现次数平衡抽取
  * - session 为内存态（组卷后判分针对当次精确题目）
  */
 object ExamEngine {
@@ -68,6 +68,12 @@ object ExamEngine {
     private val TYPE_COUNTS = listOf(1 to 90, 2 to 35, 3 to 40)
     private val TYPE_SCORES = mapOf(1 to 0.5, 2 to 1.0, 3 to 0.5)
     private const val EXAM_MINUTES = 90
+
+    /**
+     * 笔试近三年真题目标占比（0.6 = 近三年 60% + 历史真题补齐 40%）。
+     * 原「只出近三年真题」池子仅 ~413/446 题，4 场考试即刷完导致反复重复（2026-09-20 修复）。
+     */
+    private const val EXAM_RECENT_RATIO = 0.6
 
     /** 各题型统计累加器。 */
     private class Acc { var total = 0; var correct = 0 }
@@ -85,13 +91,14 @@ object ExamEngine {
             val candidates = pool.filter {
                 it.qType == qType && !it.answer.isNullOrEmpty() && subjects.contains(it.subject)
             }
-            // 笔试保持只出近三年真题（不足才补），模拟真实考试；组内按出现次数平衡
+            // 近三年真题优先（目标 60%）+ 历史真题补齐（is_real_exam=true 非近三年）；
+            // 历史真题不足时从近三年补足，保证每卷题量完整；组内按出现次数平衡
             val recent = candidates.filter { QuizBuilder.isRecent(it) }
-            val rest = candidates.filter { !QuizBuilder.isRecent(it) }
-            // 对齐 web 端：组内按历史出现次数平衡 + 随机抽取（近三年优先，不足才补老题）
-            val nRecent = minOf(want, recent.size)
-            val chosen = QuizBuilder.pickBalanced(recent, nRecent) +
-                QuizBuilder.pickBalanced(rest, (want - nRecent).coerceAtLeast(0))
+            val rest = candidates.filter { !QuizBuilder.isRecent(it) && it.isRealExam == true }
+            val wantRecent = Math.round(want * EXAM_RECENT_RATIO).toInt()
+            val fromRest = QuizBuilder.pickBalanced(rest, (want - minOf(wantRecent, recent.size)).coerceAtLeast(0))
+            val fromRecent = QuizBuilder.pickBalanced(recent, (want - fromRest.size).coerceAtLeast(0))
+            val chosen = fromRecent + fromRest
             picked.addAll(chosen)
             typeCounts[qType] = chosen.size
         }
@@ -119,7 +126,7 @@ object ExamEngine {
     fun examQuestionFull(paperId: String, questionId: Long): Question? =
         sessionQuestion(paperId, questionId)
 
-    /** 单题即时判分；answer 返回原始存储答案（判断题「正确/错误」），与 web 端一致。 */
+    /** 单题即时判分；answer 返回原始存储答案（判断题「正确/错误」）。 */
     fun examCheck(paperId: String, questionId: Long, answer: String): ExamCheckResult? {
         val q = sessionQuestion(paperId, questionId) ?: return null
         val correct = Grading.isCorrectRaw(q, answer)

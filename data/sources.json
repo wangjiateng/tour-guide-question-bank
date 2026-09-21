@@ -56,8 +56,8 @@
       "title": "2023年全国导游资格考试真题",
       "kind": "static_page",
       "status": "ready",
-      "question_count": 37,
-      "last_refresh_at": null,
+      "question_count": 38,
+      "last_refresh_at": "2026-09-21 19:30:00",
       "created_at": "2026-08-14 08:05:43"
     },
     {
@@ -66,8 +66,8 @@
       "title": "2024年全国导游资格考试真题",
       "kind": "static_page",
       "status": "ready",
-      "question_count": 79,
-      "last_refresh_at": null,
+      "question_count": 80,
+      "last_refresh_at": "2026-09-21 19:30:00",
       "created_at": "2026-08-14 08:05:43"
     },
     {
@@ -76,8 +76,8 @@
       "title": "2025年全国导游资格考试真题",
       "kind": "static_page",
       "status": "ready",
-      "question_count": 86,
-      "last_refresh_at": null,
+      "question_count": 92,
+      "last_refresh_at": "2026-09-21 19:30:00",
       "created_at": "2026-08-14 08:05:43"
     },
     {
@@ -249,6 +249,176 @@
       "question_count": 1848,
       "last_refresh_at": null,
       "created_at": "2026-08-26 12:28:12"
+    },
+    {
+      "id": 68,
+      "url": "https://mp.weixin.qq.com/s/Za0ap5YPg8DVEK0cdQvHpw",
+      "title": "超全 | 2025导考笔试真题（科一科二/科三科四）-101贝考",
+      "kind": "static_page",
+      "status": "ready",
+      "question_count": 58,
+      "last_refresh_at": "2026-09-21 22:10:00",
+      "created_at": "2026-09-21 22:10:00"
+    },
+    {
+      "id": 69,
+      "url": "https://www.renrendoc.com/paper/385346267.html",
+      "title": "2024年参加导游员资格基础知识考试题库与答案-人人文库",
+      "kind": "static_page",
+      "status": "ready",
+      "question_count": 110,
+      "last_refresh_at": "2026-09-22 00:30:00",
+      "created_at": "2026-09-22 00:30:00"
+    },
+    {
+      "id": 70,
+      "url": "https://www.renrendoc.com/paper/399215986.html",
+      "title": "2025导游证资格考试全面回顾试题及答案-人人文库",
+      "kind": "static_page",
+      "status": "ready",
+      "question_count": 20,
+      "last_refresh_at": "2026-09-22 00:30:00",
+      "created_at": "2026-09-22 00:30:00"
+    },
+    {
+      "id": 71,
+      "url": "https://www.renrendoc.com/paper/387609246.html",
+      "title": "导游考试试题及答案-人人文库",
+      "kind": "static_page",
+      "status": "ready",
+      "question_count": 36,
+      "last_refresh_at": "2026-09-22 00:30:00",
+      "created_at": "2026-09-22 00:30:00"
+    },
+    {
+      "id": 72,
+      "url": "https://www.renrendoc.com/paper/399441801.html",
+      "title": "导游资格考试试题及答案-人人文库",
+      "kind": "static_page",
+      "status": "ready",
+      "question_count": 17,
+      "last_refresh_at": "2026-09-22 00:30:00",
+      "created_at": "2026-09-22 00:30:00"
+    },
+    {
+      "id": 73,
+      "url": "https://www.renrendoc.com/paper/399206012.html",
+      "title": "导游资格考试题库-人人文库",
+      "kind": "static_page",
+      "status": "ready",
+      "question_count": 20,
+      "last_refresh_at": "2026-09-22 00:30:00",
+      "created_at": "2026-09-22 00:30:00"
+    },
+    {
+      "id": 74,
+      "url": "https://www.renrendoc.com/paper/399206157.html",
+      "title": "导游资格考试题库-人人文库",
+      "kind": "static_page",
+      "status": "ready",
+      "question_count": 19,
+      "last_refresh_at": "2026-09-22 00:30:00",
+      "created_at": "2026-09-22 00:30:00"
+    },
+    {
+      "id": 75,
+      "url": "https://www.yjbys.com/edu/daoyou/476202.html",
+      "title": "2024年导游证考试题库精选13套-应届毕业生网",
+      "kind": "static_page",
+      "status": "ready",
+      "question_count": 56,
+      "last_refresh_at": "2026-09-22 00:30:00",
+      "created_at": "2026-09-22 00:30:00"
+    },
+    {
+      "id": 76,
+      "url": "https://www.yjbys.com/edu/daoyou/476203.html",
+      "title": "导游证考试题库精选-应届毕业生网",
+      "kind": "static_page",
+      "status": "ready",
+      "question_count": 75,
+      "last_refresh_at": "2026-09-22 00:30:00",
+      "created_at": "2026-09-22 00:30:00"
+    },
+    {
+      "id": 77,
+      "url": "https://www.yjbys.com/edu/daoyou/248671.html",
+      "title": "导游证考试题库-应届毕业生网",
+      "kind": "static_page",
+      "status": "ready",
+      "question_count": 41,
+      "last_refresh_at": "2026-09-22 00:30:00",
+      "created_at": "2026-09-22 00:30:00"
+    },
+    {
+      "id": 78,
+      "url": "https://max.book118.com/html/2025/0502/7131003035010100.shtm",
+      "title": "2025年导游资格证考试试卷及答案-原创力文档",
+      "kind": "static_page",
+      "status": "ready",
+      "question_count": 7,
+      "last_refresh_at": "2026-09-22 00:30:00",
+      "created_at": "2026-09-22 00:30:00"
+    },
+    {
+      "id": 79,
+      "url": "https://max.book118.com/html/2025/0318/6100102243011055.shtm",
+      "title": "2025年导游资格考试真题-原创力文档",
+      "kind": "static_page",
+      "status": "ready",
+      "question_count": 5,
+      "last_refresh_at": "2026-09-22 00:30:00",
+      "created_at": "2026-09-22 00:30:00"
+    },
+    {
+      "id": 80,
+      "url": "https://max.book118.com/html/2024/1110/5104310333011343.shtm",
+      "title": "2024年导游考试真题-原创力文档",
+      "kind": "static_page",
+      "status": "ready",
+      "question_count": 10,
+      "last_refresh_at": "2026-09-22 00:30:00",
+      "created_at": "2026-09-22 00:30:00"
+    },
+    {
+      "id": 81,
+      "url": "https://max.book118.com/html/2025/0401/7033010103010054.shtm",
+      "title": "2025年导游考试试题-原创力文档",
+      "kind": "static_page",
+      "status": "ready",
+      "question_count": 2,
+      "last_refresh_at": "2026-09-22 00:30:00",
+      "created_at": "2026-09-22 00:30:00"
+    },
+    {
+      "id": 82,
+      "url": "https://max.book118.com/html/2024/0926/8110000112006130.shtm",
+      "title": "2024年导游考试题库-原创力文档",
+      "kind": "static_page",
+      "status": "ready",
+      "question_count": 3,
+      "last_refresh_at": "2026-09-22 00:30:00",
+      "created_at": "2026-09-22 00:30:00"
+    },
+    {
+      "id": 83,
+      "url": "https://blog.csdn.net/renrenti/article/details/145038851",
+      "title": "导游资格考试题目汇总-CSDN博客",
+      "kind": "static_page",
+      "status": "ready",
+      "question_count": 13,
+      "last_refresh_at": "2026-09-22 00:30:00",
+      "created_at": "2026-09-22 00:30:00"
+    },
+    {
+      "id": 84,
+      "url": "https://wenku.baidu.com/view/737f4fd0670e52ea551810a6f524ccbff021ca5f.html",
+      "title": "导游资格考试真题-百度文库",
+      "kind": "static_page",
+      "status": "ready",
+      "question_count": 7,
+      "last_refresh_at": "2026-09-22 00:30:00",
+      "created_at": "2026-09-22 00:30:00"
     }
   ]
 }

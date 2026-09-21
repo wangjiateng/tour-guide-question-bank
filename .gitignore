@@ -1,10 +1,20 @@
+# AI 工具 / IDE
 dev-review-code/
 dev-review-code.zip
-node_modules/
-dist/
-tsconfig.tsbuildinfo
-.vite/
 .loopx/
 .codex/
 .pi/
 .vscode/
+.agents/
+.claude/
+.comate/
+.popo.json
+agent/
+data/skills/
+skills-lock.json
+
+# Python 工具产物（scripts/dedup 运行时生成）
+__pycache__/
+*.pyc
+
+# 说明：本仓库为纯 Android 工程（android/），Gradle / Android 构建产物忽略规则见 android/.gitignore

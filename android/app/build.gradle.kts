@@ -21,6 +21,8 @@ android {
         release {
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            // 用 debug 签名出 release 包：无调试开销、可直接安装分发
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
     compileOptions {
@@ -36,9 +38,9 @@ android {
     }
 }
 
-// 题库 JSON 是唯一事实源（public/data/，AI 直接维护）：构建时复制进 assets，不产生副本漂移
+// 题库 JSON 是唯一事实源（仓库根 data/，AI 直接维护）：构建时复制进 assets，不产生副本漂移
 val copyQuizData = tasks.register<Copy>("copyQuizData") {
-    from(file("${rootProject.projectDir}/../public/data"))
+    from(file("${rootProject.projectDir}/../data"))
     into("src/main/assets/data")
 }
 tasks.named("preBuild") { dependsOn(copyQuizData) }

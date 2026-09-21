@@ -11,7 +11,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-/** 一次答题记录（含完整题目快照，与 web 端 Attempt 对齐）。 */
+/** 一次答题记录（含完整题目快照）。 */
 @Serializable
 data class Attempt(
     val id: Long,
@@ -24,8 +24,7 @@ data class Attempt(
 
 /**
  * 答题记录持久化：答题历史 / 错题本 / 统计 / 组卷出现计数，存应用私有目录
- * files/records.json（kotlinx.serialization），替代 web 端 localStorage——
- * 换端不丢、清缓存才丢，可靠性优于 WebView localStorage。
+ * files/records.json（kotlinx.serialization）——换设备不丢，清应用数据才丢。
  */
 object RecordsStore {
 
@@ -100,7 +99,7 @@ object RecordsStore {
     fun attempts(limit: Int = 500): List<Attempt> =
         attempts.toList().takeLast(limit).asReversed()
 
-    /** 错题池：答错过去重的题（最近答错优先），错后答对仍在池——与 web 端 wrongPool 一致。 */
+    /** 错题池：答错过去重的题（最近答错优先），错后答对仍在池。 */
     @Synchronized
     fun wrongPool(subject: Int? = null, offset: Int = 0, limit: Int = 50): Pair<Int, List<Question>> {
         val byQuestion = linkedMapOf<Long, Attempt>()

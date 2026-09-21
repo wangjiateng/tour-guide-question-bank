@@ -6,11 +6,11 @@ description: 爬虫侧数据结构 / SQLite schema / 去重 / 分类规则的权
 # 爬虫数据定义（CRAWLER-DATA）
 
 面向 AI 编码代理：爬虫管线的**数据结构、SQLite schema、去重/分类规则、导出格式**的权威定义。
-与 [AGENTS.md](./AGENTS.md) 配合使用——本文件聚焦 Python 爬虫侧；前端如何消费这些数据（判分规则/数据文件格式）见 AGENTS.md §4/§5。
+与 [AGENTS.md](./AGENTS.md) 配合使用——本文件聚焦 Python 爬虫侧；客户端如何消费这些数据（判分规则/数据文件格式）见 AGENTS.md §4/§5。
 
-> 何时读本文件：仅当改动**爬虫或数据相关代码**时阅读；日常前端开发只需 AGENTS.md。
+> **历史文档**：爬虫代码（`scripts/crawl.py`、`scripts/crawler/`）此前已移除，本文件保留数据结构 / 去重 / 分类规则的权威定义，供维护 `data/` 或重建采集时参考。文中路径已对齐当前纯 Android 仓库结构（题库 = 仓库根 `data/`）。
 
-> 改爬虫/数据相关代码前**必读**；触及「红线」的改动（§4 去重、§5 分类顺序）必须跑全量 pytest。
+> 何时读本文件：仅当改动**数据文件或重建爬虫**时阅读；日常 Android 开发只需 AGENTS.md。
 
 ## 1. 数据流概览
 
@@ -20,12 +20,12 @@ scripts/crawl.py（CLI 入口，PYTHONPATH=scripts）
       adapters.build_adapter(kind) 选适配器（ADAPTERS 注册表）
       _crawl_all：逐页 adapter.fetch_page(page) → FetchResult(questions, has_more)
       _store_questions：ParsedQuestion → 去重入库（question_text + norm_text 双键）
-  → data/quiz.db（爬虫工作存储，gitignore）
-  → frontend/public/data/*.json（前端唯一数据源，由 AI 直接维护，格式见 §8）
+  → <爬虫工作目录>/quiz.db（爬虫自有 SQLite 工作存储，已随爬虫移除，gitignore）
+  → data/*.json（题库唯一数据源，由 AI 直接维护，格式见 §8）
 ```
 
 - 生产者：适配器产出 `ParsedQuestion`；消费者：`_store_questions`（写库）
-- `data/quiz.db` 不是分发物：前端只认 `frontend/public/data/` 下的静态 JSON（AI 直接编辑）
+- 爬虫的 SQLite 工作库不是分发物：客户端只认仓库根 `data/` 下的静态 JSON（AI 直接编辑）
 
 ## 2. 核心数据结构
 
@@ -185,7 +185,7 @@ class ExamcooPaper:
 - `add_source_and_crawl(url, kind, config)` / `refresh_source(source_id)`：抓取 → 入库 → 回写 `question_count`/状态，返回 `{ok, url, source_id, kind, reason, questions_found, questions_inserted, questions_updated, questions_deduped, pages_fetched}`
 - **`questions_deduped` 是跨平台规范化命中数，不是失败**；`ok=false` 时看 `reason`
 
-## 8. 数据文件格式（`frontend/public/data/*.json`，AI 维护依据）
+## 8. 数据文件格式（`data/*.json`，AI 维护依据）
 
 > 采集脚本不生成/覆盖这些文件；新增或修改题目时，由 AI **直接读取真实文件内容**后按本格式编辑。
 > （`scripts/export_static.py` 曾是从旧库导出的迁移脚本，迁移完成后已删除。）
@@ -197,9 +197,9 @@ class ExamcooPaper:
 | `questions_0.json` | 未分类题（subject NULL） |
 | `questions_1..4.json` | 按科目分文件 |
 
-题目字段（与前端 `types.ts` 的 `Question` 对齐）：`id / question_text / option_a..e / answer / explanation / subject / q_type / province / years / source_id / paper_title / source_url`。
+题目字段（与 Android `data/Models.kt` 的 `Question` 对齐）：`id / question_text / option_a..e / answer / explanation / subject / q_type / province / years / source_id / paper_title / source_url`。
 
-- **answer 原样保留**：判断题 `正确/错误`、多选字母串 `ABCD`——前端判分时映射，勿在数据侧归一化
+- **answer 原样保留**：判断题 `正确/错误`、多选字母串 `ABCD`——客户端判分时映射，勿在数据侧归一化
 - 维护约定：题目按 id 升序、时间戳只写 manifest（`generated_at`），编辑时保持，避免无谓 diff
 
 ## 9. 数据红线速查（改代码前必看）
@@ -207,5 +207,5 @@ class ExamcooPaper:
 1. `question_text` 与 `norm_text` 双 UNIQUE 不可破坏 → 改 `normalize_question_text` 必跑全量测试
 2. `_PAPER_TITLE_SUBJECTS` 中「地方…」必须先于「基础知识…」→ 改规则用真实试卷标题验证
 3. 题级关键词只用复合词，裸「法/方法/做法」会误分类业务题
-4. answer 存储/导出格式（判断题中文、多选字母串）不可改——前端判分与其强耦合
-5. 改任何数据定义后：`cd frontend && npm run build` + `PYTHONPATH=scripts .venv/bin/python -m pytest`（49 项全绿）；若改了数据文件，直接编辑 `frontend/public/data/*.json` 后重新构建
+4. answer 存储/导出格式（判断题中文、多选字母串）不可改——客户端判分与其强耦合
+5. 改任何数据定义后：直接编辑 `data/*.json`，然后 `cd android && ./gradlew assembleDebug` 验证 APK 可正常构建

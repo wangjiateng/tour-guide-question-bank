@@ -108,7 +108,7 @@ fun ExamScreen() {
 }
 
 /**
- * 答题执行器：逐题判定（对齐 web 端 ExamView）——
+ * 答题执行器：逐题判定——
  * 单选/判断点选即判；多选勾选后点「确认答案」判定；已判题可改答案重判；
  * 翻页/跳题/交卷前自动补判未确认的多选；题号导航区分 当前/对/错/已答。
  */
@@ -212,7 +212,7 @@ private fun ExamRunner(paper: ExamPaper, onSubmitted: (ExamResult) -> Unit) {
             LazyVerticalGrid(
                 columns = GridCells.Fixed(8),
                 // 有界高度必需：垂直懒加载组件嵌在 verticalScroll 容器内时，
-                // 无限高度约束会直接 IllegalStateException 崩溃（同 web 端 qnav max-height）
+                // 无限高度约束会直接 IllegalStateException 崩溃（故用 heightIn 限高）
                 modifier = Modifier.fillMaxWidth().heightIn(max = 320.dp).padding(vertical = 4.dp),
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalArrangement = Arrangement.spacedBy(6.dp),
@@ -260,7 +260,7 @@ private fun ExamRunner(paper: ExamPaper, onSubmitted: (ExamResult) -> Unit) {
             onSelect = { letter ->
                 if (finished) return@QuestionCard
                 val qid = cur.id
-                // 已判题改答案：清除判定，改完重判（对齐 web 端）
+                // 已判题改答案：清除判定，改完重判
                 if (qid in verdicts) {
                     verdicts = verdicts - qid
                     checkedMap = checkedMap - qid
@@ -290,7 +290,7 @@ private fun ExamRunner(paper: ExamPaper, onSubmitted: (ExamResult) -> Unit) {
                 ) { Text("确认答案") }
             }
         }
-        // 判定反馈（原始存储答案显示，对齐 web：判断题显示「正确答案：正确」）
+        // 判定反馈（显示原始存储答案：判断题显示「正确答案：正确」）
         if (verdict != null && checkedResult != null) {
             Text(
                 text = (if (verdict) "✓ 答对了" else "✗ 答错了") + " · 正确答案：${checkedResult.answer}",

@@ -6,8 +6,8 @@ import kotlinx.coroutines.sync.withLock
 
 /**
  * 题库仓库：从 APK 内置 assets/data 目录 JSON 加载题库（16MB 全量离线）。
- * 与 web 端 dataStore.ts 行为对齐：manifest 先行（版本源）、科目文件懒加载 + 并发去重。
- * 数据文件由构建脚本从 public/data/（唯一事实源）复制进 assets，不做网络请求。
+ * manifest 先行（版本源），科目文件懒加载 + 并发去重。
+ * 数据文件由构建任务从仓库根 data/（唯一事实源）复制进 assets，不做网络请求。
  */
 object QuestionRepository {
 
@@ -54,7 +54,7 @@ object QuestionRepository {
     suspend fun loadSubjectQuestions(subject: Int?): List<Question> {
         val key = subjectKey(subject)
         subjectCache[key]?.let { return it }
-        loadManifest() // 对齐 web：先确保版本源就绪
+        loadManifest() // 先确保版本源就绪
         mutex.withLock {
             subjectCache[key]?.let { return it }
             val text = assets.open("data/questions_$key.json").bufferedReader().use { it.readText() }
