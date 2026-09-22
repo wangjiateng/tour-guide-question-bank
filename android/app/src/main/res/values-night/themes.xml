@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 系统深色模式下的窗口主题（values-night 覆盖，兼容 minSdk 24） -->
+    <style name="Theme.DaoyouTiku" parent="android:Theme.Material.NoActionBar">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+    </style>
+</resources>

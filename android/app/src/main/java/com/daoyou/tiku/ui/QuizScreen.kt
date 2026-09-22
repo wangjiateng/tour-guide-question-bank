@@ -203,7 +203,7 @@ internal fun QuestionPage(
                     2 -> selections[page] = if (letter in selected) selected - letter else selected + letter
                     else -> {
                         selections[page] = setOf(letter)
-                        commitQuestion(q, page, selections, answers, results)
+                        commitQuestion(q, page, letter, answers, results)
                     }
                 }
             },
@@ -213,26 +213,22 @@ internal fun QuestionPage(
             Spacer(Modifier.height(4.dp))
             Button(
                 enabled = selected.isNotEmpty(),
-                onClick = { commitQuestion(q, page, selections, answers, results) },
+                onClick = { commitQuestion(q, page, selected.sorted().joinToString(""), answers, results) },
                 modifier = Modifier.fillMaxWidth(),
             ) { Text("确认答案") }
         }
     }
 }
 
-/** 判定并记录某页（单选/判断点选即判；多选确认后判）。答案从状态源实时读取，避免闭包旧值。 */
+/** 判定并记录某页（单选/判断点选即判；多选确认后判）。given 为显式传入的答案串，无任何时序依赖。 */
 internal fun commitQuestion(
     q: Question,
     page: Int,
-    selections: SnapshotStateMap<Int, Set<String>>,
+    given: String,
     answers: SnapshotStateList<String?>,
     results: SnapshotStateList<Boolean?>,
 ) {
     if (results[page] != null) return
-    val current = selections[page]
-        ?: answers[page]?.map { it.toString() }?.toSet()
-        ?: emptySet()
-    val given = current.sorted().joinToString("")
     if (given.isEmpty()) return
     val r = Grading.checkQuestion(q, given)
     RecordsStore.recordAttempt(q, given, r.correct)

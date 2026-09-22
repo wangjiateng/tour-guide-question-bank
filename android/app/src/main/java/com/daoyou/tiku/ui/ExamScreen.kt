@@ -222,8 +222,8 @@ private fun ExamRunner(paper: ExamPaper, onSubmitted: (ExamResult) -> Unit) {
                     val v = verdicts[q.id]
                     val bg = when {
                         i == index -> MaterialTheme.colorScheme.primary
-                        v == true -> Color(0xFFC8E6C9)
-                        v == false -> Color(0xFFFFCDD2)
+                        v == true -> JudgeColors.correctBg
+                        v == false -> JudgeColors.wrongBg
                         answers.containsKey(q.id) -> MaterialTheme.colorScheme.primaryContainer
                         else -> MaterialTheme.colorScheme.surfaceVariant
                     }

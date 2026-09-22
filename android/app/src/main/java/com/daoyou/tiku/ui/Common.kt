@@ -260,8 +260,8 @@ private fun OptionRow(
 ) {
     val multi = qType == 2
     val rowBg = when {
-        revealed && isRef -> Color(0xFFC8E6C9)
-        revealed && isChosen && !isRef -> Color(0xFFFFCDD2)
+        revealed && isRef -> JudgeColors.correctBg
+        revealed && isChosen && !isRef -> JudgeColors.wrongBg
         isChosen -> MaterialTheme.colorScheme.primaryContainer
         else -> MaterialTheme.colorScheme.surfaceVariant
     }
@@ -275,7 +275,7 @@ private fun OptionRow(
     else if (revealed && isRef || isChosen) Color.White
     else MaterialTheme.colorScheme.onSurfaceVariant
     val textFg = when {
-        revealed && (isRef || (isChosen && !isRef)) -> Color(0xFF1B1B1B)
+        revealed && (isRef || (isChosen && !isRef)) -> JudgeColors.revealText
         isChosen -> MaterialTheme.colorScheme.onPrimaryContainer
         else -> MaterialTheme.colorScheme.onSurfaceVariant
     }
