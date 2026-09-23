@@ -27,4 +27,10 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    override fun onStop() {
+        super.onStop()
+        // 生命周期兜底：离开前台时把未落盘的记录/计数同步写盘，防进程被杀丢最近改动
+        RecordsStore.flushSync()
+    }
 }

@@ -108,16 +108,19 @@ fun QuizScreen(activeSubject: Int?) {
                     loading = true
                     loadError = false
                     scope.launch {
-                        try {
-                            questions = QuizBuilder.randomQuiz(
+                        // 组卷（全库过滤+交错排序）为 CPU 密集，移出主线程
+                        questions = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+                            try {
+                                QuizBuilder.randomQuiz(
                                 QuizOptions(size = null, answeredOnly = true, subject = subject),
-                            )
-                            loadError = questions.isNullOrEmpty()
-                            if (loadError) questions = null
-                        } catch (e: Exception) {
-                            loadError = true
-                            questions = null
+                                )
+                            } catch (e: Exception) {
+                                loadError = true
+                                null
+                            }
                         }
+                        loadError = questions.isNullOrEmpty()
+                        if (loadError) questions = null
                         if (questions != null) {
                             answers.clear(); answers.addAll(List(questions!!.size) { null })
                             results.clear(); results.addAll(List(questions!!.size) { null })

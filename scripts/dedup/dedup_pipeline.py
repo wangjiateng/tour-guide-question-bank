@@ -61,6 +61,7 @@ def norm(t):
 
 
 def load_ocr_fixes():
+    """加载 OCR 纠错词典（ocr_fixes.json），返回 {错词: 正词} 映射。"""
     path = os.path.join(SCRIPT_DIR, 'ocr_fixes.json')
     with open(path, encoding='utf-8') as f:
         return json.load(f)['fixes']
@@ -110,6 +111,7 @@ def quality(q):
 
 
 def merge_years(a, b):
+    """合并两题的 years：取年份并集、升序后以逗号连接；均为空时返回 None。"""
     ys = set()
     for y in (a, b):
         if y:
@@ -127,8 +129,8 @@ def answer_text(q):
 
 def options_overlap(qa, qb):
     """两组选项文本（强归一、非空）的交集占比，用于收紧带的精度保护。"""
-    oa = set(strong_norm(qa.get(k)) for k in ('option_a','option_b','option_c','option_d','option_e') if qa.get(k))
-    ob = set(strong_norm(qb.get(k)) for k in ('option_a','option_b','option_c','option_d','option_e') if qb.get(k))
+    oa = set(strong_norm(qa.get(k)) for k in ('option_a', 'option_b', 'option_c', 'option_d', 'option_e') if qa.get(k))
+    ob = set(strong_norm(qb.get(k)) for k in ('option_a', 'option_b', 'option_c', 'option_d', 'option_e') if qb.get(k))
     if not oa or not ob:
         return 1.0
     return len(oa & ob) / max(len(oa), len(ob))
@@ -143,6 +145,7 @@ def merge_q(survivor, loser):
 
 
 def load_all():
+    """加载全部科目题库并汇总为单一列表；为每题注入内部字段 _file 标记来源文件。"""
     questions = []
     for f in FILES:
         d = json.load(open(os.path.join(DATA, f), encoding='utf-8'))
@@ -160,7 +163,8 @@ def save_all(questions):
     for f in FILES:
         qs = sorted(by_file[f], key=lambda q: q['id'])
         ids = [q['id'] for q in qs]
-        assert ids == sorted(ids) and len(set(ids)) == len(ids), f'{f}: id 顺序/重复异常'
+        if not (ids == sorted(ids) and len(set(ids)) == len(ids)):
+            raise ValueError(f'{f}: 题目 id 顺序/重复校验失败')
         obj = {'subject': int(f[len('questions_'):-5]), 'questions': qs}
         text = json.dumps(obj, ensure_ascii=False, indent=2) + '\n'
         json.loads(text)  # 写盘前校验
@@ -170,7 +174,15 @@ def save_all(questions):
 
 
 def bucket_candidates(questions, stems):
-    """首 N 字符前缀分桶生成候选对（同时用 norm 与 strong_norm 分桶，抗前缀 OCR 错字）。"""
+    """构建语义去重候选对：按题干前缀分桶，桶内两两组对（双通道抗前缀 OCR 错字）。
+
+    Args:
+        questions: 参与去重的题目列表。
+        stems: 与 questions 对齐的题干文本列表。
+
+    Returns:
+        候选对下标集合 {(i, j), ...}，恒有 i < j。
+    """
     pairs = set()
     for stem_list in (stems, [strong_norm(q['question_text']) for q in questions]):
         buckets = defaultdict(list)
@@ -188,6 +200,7 @@ def bucket_candidates(questions, stems):
 
 
 def main():
+    """去重管线入口。--dry-run 仅输出报告不写盘；--apply 执行写回。\n    编排顺序：Stage1 三元组精确 → Stage2 模糊合并 → Stage4 语义去重 → Stage3 灰区报告。"""
     apply = '--apply' in sys.argv
     os.makedirs(REPORT_DIR, exist_ok=True)
     questions = load_all()
@@ -206,7 +219,7 @@ def main():
             for loser in g[1:]:
                 stage1_remove.add(id(loser))
                 merge_q(survivor, loser)
-    print(f'Stage1 三元组精确重复: {len(groups)} 组中 {sum(1 for g in groups.values() if len(g)>1)} 组含重复，'
+    print(f'Stage1 三元组精确重复: {len(groups)} 组中 {sum(1 for g in groups.values() if len(g) > 1)} 组含重复，'
           f'待删除 {len(stage1_remove)} 题')
 
     # ---------- Stage 2: 模糊自动合并 ----------
@@ -266,6 +279,7 @@ def main():
         vecs = [tfidf(t) for t in corpus]
 
         def vcos(a, b):
+            """计算两个 TF-IDF 词向量的余弦相似度，无交集时返回 0。"""
             inter = set(a) & set(b)
             if not inter:
                 return 0.0
@@ -363,7 +377,8 @@ def main():
 
     if apply:
         final = [q for idx, q in enumerate(remain) if idx not in stage2_remove and id(q) not in stage4_remove]
-        assert len(final) == report['total_after']
+        if len(final) != report['total_after']:
+            raise ValueError(f"写回对账失败: 预期 {report['total_after']} 题，实际 {len(final)} 题")
         save_all(final)
         print('\n已写回数据文件。请更新 manifest.json 计数，然后 cd android && ./gradlew assembleDebug 重新构建 APK。')
     else:

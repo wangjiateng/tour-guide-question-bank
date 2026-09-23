@@ -56,9 +56,17 @@ fun WrongScreen(activeSubject: Int?) {
     val scope = androidx.compose.runtime.rememberCoroutineScope()
 
     LaunchedEffect(activeSubject) {
-        val (t, list) = RecordsStore.wrongPool(subject = activeSubject, offset = 0, limit = 100)
+        // 错题池需全量遍历答题记录，移出主线程
+        val (t, list) = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+            RecordsStore.wrongPool(subject = activeSubject, offset = 0, limit = 100)
+        }
         total = t
         questions = list
+        // 重练中切换科目：逐页作答状态与旧题目集绑定，重置回列表避免越界/残留判定
+        if (mode == "drill") {
+            mode = "list"
+            answers.clear(); results.clear(); selections.clear(); marked.clear(); panelExpanded = false
+        }
     }
 
     when (mode) {

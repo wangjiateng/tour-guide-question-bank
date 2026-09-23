@@ -1,5 +1,27 @@
 [
   {
+    "sim": 0.92,
+    "id_a": 103902,
+    "id_b": 103986,
+    "qtype": 1,
+    "answer": "B",
+    "text_a": "旅行社取得经营许可满（  ），且未因侵害旅游者合法权益受到罚款以上处罚的，可申请出境旅游业务。",
+    "text_b": "旅行社取得经营许可满（ ），且未因侵害旅游者合法权益受到行政机关罚款以上处罚的，可以申请经营出境旅游业务。",
+    "file_a": "questions_1.json",
+    "file_b": "questions_1.json"
+  },
+  {
+    "sim": 0.92,
+    "id_a": 102306,
+    "id_b": 103902,
+    "qtype": 1,
+    "answer": "B",
+    "text_a": "旅行社取得经营许可满（ ），且未因侵害旅游者合法权益受到行政机关罚款以上处罚的，可以申请经营出境旅游业务。",
+    "text_b": "旅行社取得经营许可满（  ），且未因侵害旅游者合法权益受到罚款以上处罚的，可申请出境旅游业务。",
+    "file_a": "questions_1.json",
+    "file_b": "questions_1.json"
+  },
+  {
     "sim": 0.914,
     "id_a": 23290,
     "id_b": 97975,
@@ -9,6 +31,17 @@
     "text_b": "根据《国内航空运输承运人赔偿责任限额规定》，对每名旅客的赔偿责任限额为 （ ）。（ ）",
     "file_a": "questions_1.json",
     "file_b": "questions_1.json"
+  },
+  {
+    "sim": 0.914,
+    "id_a": 103749,
+    "id_b": 104061,
+    "qtype": 1,
+    "answer": "A",
+    "text_a": "“落霞与孤鹜齐飞，秋水共长天一色”出自（ ）",
+    "text_b": "\"落霞与孤鹜齐飞，秋水共长天一色\"出自王勃的（  ）。",
+    "file_a": "questions_3.json",
+    "file_b": "questions_3.json"
   },
   {
     "sim": 0.913,
@@ -33,6 +66,28 @@
     "file_b": "questions_2.json"
   },
   {
+    "sim": 0.911,
+    "id_a": 102630,
+    "id_b": 104096,
+    "qtype": 1,
+    "answer": "B",
+    "text_a": "旅行社为接待旅游者选择的交通、住宿、餐饮、景区等企业，不具有合法经营资格或者接待服务能力的，由县级以上旅游行政管理部门责令改正，没收违法所得，处违法所得3倍以下",
+    "text_b": "旅行社为接待旅游者选择的交通、住宿、餐饮、景区等企业，不具有合法经营资格或者接待服务能力的，由县级以上旅游行政管理部门责令改正，没收违法所得，处违法所得3倍以下",
+    "file_a": "questions_1.json",
+    "file_b": "questions_1.json"
+  },
+  {
+    "sim": 0.909,
+    "id_a": 93650,
+    "id_b": 103902,
+    "qtype": 1,
+    "answer": "B",
+    "text_a": "旅行社取得经营许可满（ ）年，且未因侵害旅游者合法权益受到行政机关罚款以上处罚的，可以申请经营出境旅游业务",
+    "text_b": "旅行社取得经营许可满（  ），且未因侵害旅游者合法权益受到罚款以上处罚的，可申请出境旅游业务。",
+    "file_a": "questions_1.json",
+    "file_b": "questions_1.json"
+  },
+  {
     "sim": 0.905,
     "id_a": 105048,
     "id_b": 105050,
@@ -42,6 +97,17 @@
     "text_b": "我国旅游法规定，旅行社应当对哪些内容进行备案？",
     "file_a": "questions_1.json",
     "file_b": "questions_1.json"
+  },
+  {
+    "sim": 0.902,
+    "id_a": 31296,
+    "id_b": 104055,
+    "qtype": 1,
+    "answer": "C",
+    "text_a": "旅游团中某位游客希望其当地亲友随团活动，导游员首先应（ ）。",
+    "text_b": "旅游团中某位游客希望其在华亲友随团活动，导游人员首先应（  ）。",
+    "file_a": "questions_2.json",
+    "file_b": "questions_2.json"
   },
   {
     "sim": 0.9,
@@ -77,6 +143,17 @@
     "file_b": "questions_3.json"
   },
   {
+    "sim": 0.897,
+    "id_a": 104015,
+    "id_b": 104220,
+    "qtype": 2,
+    "answer": "ABCD",
+    "text_a": "中国古典园林常用的造景手法包括（  ）。",
+    "text_b": "中国古典园林常用的造景手法有：",
+    "file_a": "questions_3.json",
+    "file_b": "questions_3.json"
+  },
+  {
     "sim": 0.895,
     "id_a": 105009,
     "id_b": 105013,
@@ -88,26 +165,15 @@
     "file_b": "questions_3.json"
   },
   {
-    "sim": 0.889,
-    "id_a": 105035,
-    "id_b": 105036,
+    "sim": 0.892,
+    "id_a": 104092,
+    "id_b": 104129,
     "qtype": 1,
     "answer": "C",
-    "text_a": "以下哪项不属于导游人员的游客管理能力？",
-    "text_b": "以下哪项不属于导游人员的团队管理能力？",
-    "file_a": "questions_3.json",
-    "file_b": "questions_3.json"
-  },
-  {
-    "sim": 0.889,
-    "id_a": 29238,
-    "id_b": 29730,
-    "qtype": 1,
-    "answer": "A",
-    "text_a": "中国传统工艺“三绝”指（ ）。",
-    "text_b": "中国传统工艺“三绝”是（ ）。",
-    "file_a": "questions_3.json",
-    "file_b": "questions_3.json"
+    "text_a": "导游人员在导游活动中有损害国家利益和民族尊严的言行的，扣除（　）分。",
+    "text_b": "导游人员在导游活动中有损害国家利益和民族尊严的言行的，应当扣除导游证分值为（  ）。",
+    "file_a": "questions_1.json",
+    "file_b": "questions_1.json"
   },
   {
     "sim": 0.889,
@@ -130,6 +196,50 @@
     "text_b": "旅游资源与一般资源最主要的区别在于它拥有（ ）的特征。",
     "file_a": "questions_2.json",
     "file_b": "questions_2.json"
+  },
+  {
+    "sim": 0.889,
+    "id_a": 29238,
+    "id_b": 29730,
+    "qtype": 1,
+    "answer": "A",
+    "text_a": "中国传统工艺“三绝”指（ ）。",
+    "text_b": "中国传统工艺“三绝”是（ ）。",
+    "file_a": "questions_3.json",
+    "file_b": "questions_3.json"
+  },
+  {
+    "sim": 0.889,
+    "id_a": 104078,
+    "id_b": 104970,
+    "qtype": 1,
+    "answer": "B",
+    "text_a": "以\"著色富有层次、绣品若画\"为特点的名绣是（　）。",
+    "text_b": "以“著色富有层次、绣品若画”為特點的名绣是（）",
+    "file_a": "questions_3.json",
+    "file_b": "questions_3.json"
+  },
+  {
+    "sim": 0.889,
+    "id_a": 105035,
+    "id_b": 105036,
+    "qtype": 1,
+    "answer": "C",
+    "text_a": "以下哪项不属于导游人员的游客管理能力？",
+    "text_b": "以下哪项不属于导游人员的团队管理能力？",
+    "file_a": "questions_3.json",
+    "file_b": "questions_3.json"
+  },
+  {
+    "sim": 0.885,
+    "id_a": 104172,
+    "id_b": 104972,
+    "qtype": 1,
+    "answer": "C",
+    "text_a": "楹联\"听飞瀑雄声，声声震耳；浥众山彩色，色色娱人\"描写的景点是（　）。",
+    "text_b": "楹联“听飞瀑雄声，声声振耳；挹众山彩色，色色娱人。”描写的景點是（）",
+    "file_a": "questions_3.json",
+    "file_b": "questions_3.json"
   },
   {
     "sim": 0.884,
@@ -155,6 +265,39 @@
   },
   {
     "sim": 0.875,
+    "id_a": 25356,
+    "id_b": 25366,
+    "qtype": 1,
+    "answer": "C",
+    "text_a": "下列选项中不属于“江南三大奇石”的是（ ）",
+    "text_b": "下列选项中不属于“江南三大名廊”的是（ ）",
+    "file_a": "questions_3.json",
+    "file_b": "questions_3.json"
+  },
+  {
+    "sim": 0.875,
+    "id_a": 105014,
+    "id_b": 105073,
+    "qtype": 1,
+    "answer": "D",
+    "text_a": "以下哪项不属于导游人员的业务素质？",
+    "text_b": "以下哪项不属于导游人员的业务范围？",
+    "file_a": "questions_3.json",
+    "file_b": "questions_3.json"
+  },
+  {
+    "sim": 0.875,
+    "id_a": 105014,
+    "id_b": 105026,
+    "qtype": 1,
+    "answer": "D",
+    "text_a": "以下哪项不属于导游人员的业务素质？",
+    "text_b": "以下哪项不属于导游人员的业务知识？",
+    "file_a": "questions_3.json",
+    "file_b": "questions_3.json"
+  },
+  {
+    "sim": 0.875,
     "id_a": 104954,
     "id_b": 105042,
     "qtype": 1,
@@ -177,34 +320,12 @@
   },
   {
     "sim": 0.875,
-    "id_a": 105014,
-    "id_b": 105026,
-    "qtype": 1,
-    "answer": "D",
-    "text_a": "以下哪项不属于导游人员的业务素质？",
-    "text_b": "以下哪项不属于导游人员的业务知识？",
-    "file_a": "questions_3.json",
-    "file_b": "questions_3.json"
-  },
-  {
-    "sim": 0.875,
     "id_a": 105031,
     "id_b": 105038,
     "qtype": 1,
     "answer": "C",
     "text_a": "以下哪项不属于导游人员的法律意识？",
     "text_b": "以下哪项不属于导游人员的创新意识？",
-    "file_a": "questions_3.json",
-    "file_b": "questions_3.json"
-  },
-  {
-    "sim": 0.875,
-    "id_a": 25356,
-    "id_b": 25366,
-    "qtype": 1,
-    "answer": "C",
-    "text_a": "下列选项中不属于“江南三大奇石”的是（ ）",
-    "text_b": "下列选项中不属于“江南三大名廊”的是（ ）",
     "file_a": "questions_3.json",
     "file_b": "questions_3.json"
   },
@@ -220,15 +341,15 @@
     "file_b": "questions_1.json"
   },
   {
-    "sim": 0.875,
-    "id_a": 105014,
-    "id_b": 105073,
+    "sim": 0.874,
+    "id_a": 96316,
+    "id_b": 103902,
     "qtype": 1,
-    "answer": "D",
-    "text_a": "以下哪项不属于导游人员的业务素质？",
-    "text_b": "以下哪项不属于导游人员的业务范围？",
-    "file_a": "questions_3.json",
-    "file_b": "questions_3.json"
+    "answer": "B",
+    "text_a": "旅行社取得经营许可满两年，且未因侵害旅游者合法权益受到行政机关（ ）以上处罚的，可以申请经营出境旅游业务。",
+    "text_b": "旅行社取得经营许可满（  ），且未因侵害旅游者合法权益受到罚款以上处罚的，可申请出境旅游业务。",
+    "file_a": "questions_1.json",
+    "file_b": "questions_1.json"
   },
   {
     "sim": 0.87,
@@ -240,6 +361,17 @@
     "text_b": "中国公安部授权的口岸签证机关设立在山东省境内的口岸有（ ）。",
     "file_a": "questions_1.json",
     "file_b": "questions_1.json"
+  },
+  {
+    "sim": 0.867,
+    "id_a": 105010,
+    "id_b": 105026,
+    "qtype": 1,
+    "answer": "D",
+    "text_a": "以下哪项不属于导游人员的义务？",
+    "text_b": "以下哪项不属于导游人员的业务知识？",
+    "file_a": "questions_3.json",
+    "file_b": "questions_3.json"
   },
   {
     "sim": 0.867,
@@ -264,17 +396,6 @@
     "file_b": "questions_3.json"
   },
   {
-    "sim": 0.867,
-    "id_a": 105010,
-    "id_b": 105026,
-    "qtype": 1,
-    "answer": "D",
-    "text_a": "以下哪项不属于导游人员的义务？",
-    "text_b": "以下哪项不属于导游人员的业务知识？",
-    "file_a": "questions_3.json",
-    "file_b": "questions_3.json"
-  },
-  {
     "sim": 0.862,
     "id_a": 100828,
     "id_b": 100904,
@@ -287,12 +408,34 @@
   },
   {
     "sim": 0.857,
-    "id_a": 26364,
-    "id_b": 26598,
+    "id_a": 104956,
+    "id_b": 104958,
     "qtype": 1,
     "answer": "C",
-    "text_a": "在浙江省流传的剧种有多种。一般来说，著名剧目《西施泪》属（ ）。",
-    "text_b": "在浙江省流传的剧种有多种。一般来说，著名剧目《昭君出塞》属（ ）。",
+    "text_a": "以下哪项不是导游人员的义务？",
+    "text_b": "以下哪项不是导游人员的业务范围？",
+    "file_a": "questions_1.json",
+    "file_b": "questions_3.json"
+  },
+  {
+    "sim": 0.857,
+    "id_a": 16823,
+    "id_b": 17224,
+    "qtype": 2,
+    "answer": "ABCD",
+    "text_a": "中国公安部授权的口岸签证机关有（ ）。",
+    "text_b": "中国公安部授权的口岸签证机关设立的口岸有（ ）。",
+    "file_a": "questions_1.json",
+    "file_b": "questions_1.json"
+  },
+  {
+    "sim": 0.857,
+    "id_a": 104913,
+    "id_b": 104915,
+    "qtype": 1,
+    "answer": "C",
+    "text_a": "导游员在带团过程中，应如何保护游客的财产安全？",
+    "text_b": "导游员在带团过程中，应如何确保游客的行程安全？",
     "file_a": "questions_3.json",
     "file_b": "questions_3.json"
   },
@@ -306,17 +449,6 @@
     "text_b": "那达慕大会、古尔邦节、歌圩节、望果节依次属于（ ）民族的传统节日。",
     "file_a": "questions_3.json",
     "file_b": "questions_3.json"
-  },
-  {
-    "sim": 0.857,
-    "id_a": 16823,
-    "id_b": 17224,
-    "qtype": 2,
-    "answer": "ABCD",
-    "text_a": "中国公安部授权的口岸签证机关有（ ）。",
-    "text_b": "中国公安部授权的口岸签证机关设立的口岸有（ ）。",
-    "file_a": "questions_1.json",
-    "file_b": "questions_1.json"
   },
   {
     "sim": 0.857,
@@ -342,45 +474,34 @@
   },
   {
     "sim": 0.857,
-    "id_a": 104956,
-    "id_b": 104958,
+    "id_a": 26364,
+    "id_b": 26598,
     "qtype": 1,
     "answer": "C",
-    "text_a": "以下哪项不是导游人员的义务？",
-    "text_b": "以下哪项不是导游人员的业务范围？",
-    "file_a": "questions_1.json",
-    "file_b": "questions_3.json"
-  },
-  {
-    "sim": 0.857,
-    "id_a": 104913,
-    "id_b": 104915,
-    "qtype": 1,
-    "answer": "C",
-    "text_a": "导游员在带团过程中，应如何保护游客的财产安全？",
-    "text_b": "导游员在带团过程中，应如何确保游客的行程安全？",
+    "text_a": "在浙江省流传的剧种有多种。一般来说，著名剧目《西施泪》属（ ）。",
+    "text_b": "在浙江省流传的剧种有多种。一般来说，著名剧目《昭君出塞》属（ ）。",
     "file_a": "questions_3.json",
     "file_b": "questions_3.json"
   },
   {
-    "sim": 0.854,
-    "id_a": 104336,
-    "id_b": 104622,
-    "qtype": 2,
-    "answer": "ABCD",
-    "text_a": "下列属于贵州红色旅游经典景点的有（  ）。A. 遵义会议会址B. 娄山关战斗遗址C. 四渡赤水纪念馆D. 息烽集中营旧址",
-    "text_b": "下列属于贵州红色旅游经典景区的有（　）。A、遵义会议会址B、娄山关战斗遗址C、四渡赤水纪念馆D、息烽集中营革命历史纪念馆",
-    "file_a": "questions_4.json",
-    "file_b": "questions_4.json"
+    "sim": 0.857,
+    "id_a": 93505,
+    "id_b": 104031,
+    "qtype": 1,
+    "answer": "A",
+    "text_a": "当事人一方因第三人的原因造成违约的，违约责任（ ）",
+    "text_b": "当事人一方因第三人的原因造成违约的，应当向对方承担（　　）违约责任。",
+    "file_a": "questions_1.json",
+    "file_b": "questions_1.json"
   },
   {
-    "sim": 0.852,
-    "id_a": 104015,
-    "id_b": 104220,
-    "qtype": 2,
-    "answer": "ABCD",
-    "text_a": "中国古典园林常用的造景手法包括（  ）。A. 借景B. 框景C. 漏景D. 对景",
-    "text_b": "中国古典园林常用的造景手法有：A. 借景B. 对景C. 框景D. 障景",
+    "sim": 0.85,
+    "id_a": 105011,
+    "id_b": 105015,
+    "qtype": 1,
+    "answer": "D",
+    "text_a": "导游人员在进行导游服务时，应遵守的纪律是？",
+    "text_b": "导游人员在进行导游服务时，应遵守的时间观念是？",
     "file_a": "questions_3.json",
     "file_b": "questions_3.json"
   },
@@ -397,13 +518,35 @@
   },
   {
     "sim": 0.85,
-    "id_a": 105011,
-    "id_b": 105015,
+    "id_a": 103863,
+    "id_b": 104164,
+    "qtype": 1,
+    "answer": "B",
+    "text_a": "导游人员在带团过程中，如遇游客走失，应首先（ ）。",
+    "text_b": "导游人员在带团过程中，发现有游客走失，应当首先（  ）",
+    "file_a": "questions_2.json",
+    "file_b": "questions_2.json"
+  },
+  {
+    "sim": 0.847,
+    "id_a": 16392,
+    "id_b": 104074,
     "qtype": 1,
     "answer": "D",
-    "text_a": "导游人员在进行导游服务时，应遵守的纪律是？",
-    "text_b": "导游人员在进行导游服务时，应遵守的时间观念是？",
-    "file_a": "questions_3.json",
+    "text_a": "因天气原因，旅游团所乘航班需推迟2小时才能起飞，游客仍滞留在上一站，而全赔和领队又没有及时通知下一站接待社。下站导游不知道这种临时变化，仍按原计划接站，造成了空",
+    "text_b": "因天气原因，旅游团所乘航班需推迟2小时才能起飞，游客仍滞留在上一站，而全陪和领队又没有及时通知下一站接待社。下站导游不知道这种临时变化，仍按原计划接站。此时地陪",
+    "file_a": "questions_2.json",
+    "file_b": "questions_2.json"
+  },
+  {
+    "sim": 0.846,
+    "id_a": 104955,
+    "id_b": 104957,
+    "qtype": 1,
+    "answer": "C",
+    "text_a": "以下哪项不是导游人员的权利？",
+    "text_b": "以下哪项不是导游人员的责任？",
+    "file_a": "questions_1.json",
     "file_b": "questions_3.json"
   },
   {
@@ -416,17 +559,6 @@
     "text_b": "以下哪项不是导游人员的义务？",
     "file_a": "questions_1.json",
     "file_b": "questions_1.json"
-  },
-  {
-    "sim": 0.846,
-    "id_a": 104955,
-    "id_b": 104957,
-    "qtype": 1,
-    "answer": "C",
-    "text_a": "以下哪项不是导游人员的权利？",
-    "text_b": "以下哪项不是导游人员的责任？",
-    "file_a": "questions_1.json",
-    "file_b": "questions_3.json"
   },
   {
     "sim": 0.846,
@@ -484,15 +616,15 @@
     "file_b": "questions_1.json"
   },
   {
-    "sim": 0.84,
-    "id_a": 102630,
-    "id_b": 104096,
+    "sim": 0.839,
+    "id_a": 25349,
+    "id_b": 25351,
     "qtype": 1,
-    "answer": "B",
-    "text_a": "旅行社为接待旅游者选择的交通、住宿、餐饮、景区等企业，不具有合法经营资格或者接待服务能力的，由县级以上旅游行政管理部门责令改正，没收违法所得，处违法所得3倍以下",
-    "text_b": "旅行社为接待旅游者选择的交通、住宿、餐饮、景区等企业，不具有合法经营资格或者接待服务能力的，由县级以上旅游行政管理部门责令改正，没收违法所得，处违法所得3倍以下",
-    "file_a": "questions_1.json",
-    "file_b": "questions_1.json"
+    "answer": "D",
+    "text_a": "下列选项中不属于皇家园林的是（ ）",
+    "text_b": "下列选项中不属于私家园林的特征的是（ ）",
+    "file_a": "questions_3.json",
+    "file_b": "questions_3.json"
   },
   {
     "sim": 0.839,
@@ -506,24 +638,24 @@
     "file_b": "questions_3.json"
   },
   {
-    "sim": 0.839,
-    "id_a": 25349,
-    "id_b": 25351,
+    "sim": 0.835,
+    "id_a": 102756,
+    "id_b": 104000,
     "qtype": 1,
-    "answer": "D",
-    "text_a": "下列选项中不属于皇家园林的是（ ）",
-    "text_b": "下列选项中不属于私家园林的特征的是（ ）",
-    "file_a": "questions_3.json",
-    "file_b": "questions_3.json"
+    "answer": "B",
+    "text_a": "导游人员李某在带团中，擅自变更接待计划，应当受到旅游行政部门暂扣导游证（ ）的处罚。",
+    "text_b": "导游人员李某在带团中，擅自变更接待计划、擅自中止导游活动，应当受到旅游行政管理部门暂扣导游证（　）。",
+    "file_a": "questions_1.json",
+    "file_b": "questions_1.json"
   },
   {
     "sim": 0.833,
-    "id_a": 104867,
-    "id_b": 104879,
+    "id_a": 105029,
+    "id_b": 105040,
     "qtype": 1,
-    "answer": "B",
-    "text_a": "导游员在提供导游服务时，以下哪项是不符合职业道德的?",
-    "text_b": "导游员在提供导游服务时，以下哪项是符合行业标准的？",
+    "answer": "C",
+    "text_a": "以下哪项不属于导游人员的团队协作能力？",
+    "text_b": "以下哪项不属于导游人员的团队合作精神？",
     "file_a": "questions_3.json",
     "file_b": "questions_3.json"
   },
@@ -551,12 +683,12 @@
   },
   {
     "sim": 0.833,
-    "id_a": 105029,
-    "id_b": 105040,
+    "id_a": 104867,
+    "id_b": 104879,
     "qtype": 1,
-    "answer": "C",
-    "text_a": "以下哪项不属于导游人员的团队协作能力？",
-    "text_b": "以下哪项不属于导游人员的团队合作精神？",
+    "answer": "B",
+    "text_a": "导游员在提供导游服务时，以下哪项是不符合职业道德的?",
+    "text_b": "导游员在提供导游服务时，以下哪项是符合行业标准的？",
     "file_a": "questions_3.json",
     "file_b": "questions_3.json"
   },
@@ -572,6 +704,17 @@
     "file_b": "questions_4.json"
   },
   {
+    "sim": 0.829,
+    "id_a": 16062,
+    "id_b": 104079,
+    "qtype": 1,
+    "answer": "C",
+    "text_a": "“横看成岭侧成峰，远近高低各不同”，由此看来，要收到较理想的审美效果导游员应注意以下审美方法的把握（ ）（ ）。",
+    "text_b": "\"横看成岭侧成峰，远近高低各不同\"，要收到理想的审美效果，导游员应注意把握的审美方法是（　　）。",
+    "file_a": "questions_2.json",
+    "file_b": "questions_2.json"
+  },
+  {
     "sim": 0.828,
     "id_a": 105008,
     "id_b": 105041,
@@ -583,17 +726,6 @@
     "file_b": "questions_3.json"
   },
   {
-    "sim": 0.826,
-    "id_a": 31099,
-    "id_b": 104176,
-    "qtype": 1,
-    "answer": "B",
-    "text_a": "小王受旅行社委派到火车站接某旅行团，但按预定的车次没有接到该旅行团，这种情况属于 （ ）",
-    "text_b": "小王受旅行社委派到火车站接某旅行团，但按预定的车次没有接到该旅行团，这种情况属于（  ）。A. 错接   B. 空接   C. 漏接   D. 正常",
-    "file_a": "questions_2.json",
-    "file_b": "questions_2.json"
-  },
-  {
     "sim": 0.824,
     "id_a": 100968,
     "id_b": 101041,
@@ -603,6 +735,17 @@
     "text_b": "中国花岗岩地貌分布广泛，以黄山、华山、广西桂林山水最为著名。（ ）",
     "file_a": "questions_4.json",
     "file_b": "questions_4.json"
+  },
+  {
+    "sim": 0.824,
+    "id_a": 94472,
+    "id_b": 103931,
+    "qtype": 1,
+    "answer": "B",
+    "text_a": "《中华人民共和国旅游法》开始施行的日期是？",
+    "text_b": "《中华人民共和国旅游法》施行的时间是：",
+    "file_a": "questions_1.json",
+    "file_b": "questions_1.json"
   },
   {
     "sim": 0.821,
@@ -617,6 +760,17 @@
   },
   {
     "sim": 0.821,
+    "id_a": 103984,
+    "id_b": 104149,
+    "qtype": 2,
+    "answer": "ABCD",
+    "text_a": "根据《旅游法》，包价旅游合同应当载明的内容包括（  ）。",
+    "text_b": "根据《旅游法》，包价旅游合同应当包括的内容有：",
+    "file_a": "questions_1.json",
+    "file_b": "questions_1.json"
+  },
+  {
+    "sim": 0.821,
     "id_a": 104865,
     "id_b": 104916,
     "qtype": 1,
@@ -625,6 +779,28 @@
     "text_b": "导游员在带团过程中，关于导游讲解的时长，以下哪个说法是正确的？",
     "file_a": "questions_3.json",
     "file_b": "questions_3.json"
+  },
+  {
+    "sim": 0.821,
+    "id_a": 28149,
+    "id_b": 104095,
+    "qtype": 1,
+    "answer": "C",
+    "text_a": "“四面荷花三面柳，一城山色半城湖”的作者、书写者是（ ）。",
+    "text_b": "\"四面荷花三面柳，一城山色半城湖\"描写的是（  ）。",
+    "file_a": "questions_3.json",
+    "file_b": "questions_3.json"
+  },
+  {
+    "sim": 0.818,
+    "id_a": 102813,
+    "id_b": 104046,
+    "qtype": 1,
+    "answer": "A",
+    "text_a": "旅行社设立专门招徕旅游者、提供旅游咨询的服务网点应当依法向（ ）办理设立登记手续，并向所在地的旅游行政管理部门备案。",
+    "text_b": "旅行社设立专门招徕旅游者、提供旅游咨询的服务网点应当依法向（）办理设立登记手续。",
+    "file_a": "questions_1.json",
+    "file_b": "questions_1.json"
   },
   {
     "sim": 0.818,
@@ -650,17 +826,6 @@
   },
   {
     "sim": 0.815,
-    "id_a": 105041,
-    "id_b": 105049,
-    "qtype": 1,
-    "answer": "C",
-    "text_a": "以下哪项不属于导游人员的责任感？",
-    "text_b": "以下哪项不属于导游的职责？",
-    "file_a": "questions_3.json",
-    "file_b": "questions_3.json"
-  },
-  {
-    "sim": 0.815,
     "id_a": 96120,
     "id_b": 96254,
     "qtype": 3,
@@ -671,13 +836,13 @@
     "file_b": "questions_2.json"
   },
   {
-    "sim": 0.812,
-    "id_a": 105025,
-    "id_b": 105042,
+    "sim": 0.815,
+    "id_a": 105041,
+    "id_b": 105049,
     "qtype": 1,
     "answer": "C",
-    "text_a": "以下哪项不属于导游人员的服务职责？",
-    "text_b": "以下哪项不属于导游人员的职业操守？",
+    "text_a": "以下哪项不属于导游人员的责任感？",
+    "text_b": "以下哪项不属于导游的职责？",
     "file_a": "questions_3.json",
     "file_b": "questions_3.json"
   },
@@ -700,6 +865,17 @@
     "answer": "C",
     "text_a": "以下哪项不属于导游人员的职业道德？",
     "text_b": "以下哪项不属于导游人员的服务职责？",
+    "file_a": "questions_3.json",
+    "file_b": "questions_3.json"
+  },
+  {
+    "sim": 0.812,
+    "id_a": 105025,
+    "id_b": 105042,
+    "qtype": 1,
+    "answer": "C",
+    "text_a": "以下哪项不属于导游人员的服务职责？",
+    "text_b": "以下哪项不属于导游人员的职业操守？",
     "file_a": "questions_3.json",
     "file_b": "questions_3.json"
   },
@@ -759,17 +935,6 @@
     "file_b": "questions_1.json"
   },
   {
-    "sim": 0.81,
-    "id_a": 102633,
-    "id_b": 104089,
-    "qtype": 1,
-    "answer": "B",
-    "text_a": "导游人员未按照国家或旅游行业对客人服务标准的要求提供导游服务的，旅行社应该赔偿旅游者所付导游费的（ ）。",
-    "text_b": "导游人员未按照国家或旅游行业对客人服务标准的要求提供导游服务的，旅行社应该赔偿旅游者所付导游费的（　）。A.100%　B.200%　C.20%　D.10%",
-    "file_a": "questions_1.json",
-    "file_b": "questions_1.json"
-  },
-  {
     "sim": 0.809,
     "id_a": 95889,
     "id_b": 96277,
@@ -811,6 +976,61 @@
     "text_a": "导游人员在带团过程中，发现旅游者有违法犯罪行为时，应立即制止并向有关部门报告。",
     "text_b": "导游人员在带团过程中，若发现旅游者有违法行为，应立即向公安机关报告",
     "file_a": "questions_1.json",
+    "file_b": "questions_3.json"
+  },
+  {
+    "sim": 0.8,
+    "id_a": 105012,
+    "id_b": 105026,
+    "qtype": 1,
+    "answer": "D",
+    "text_a": "以下哪项不属于导游人员的职责？",
+    "text_b": "以下哪项不属于导游人员的业务知识？",
+    "file_a": "questions_3.json",
+    "file_b": "questions_3.json"
+  },
+  {
+    "sim": 0.8,
+    "id_a": 105012,
+    "id_b": 105014,
+    "qtype": 1,
+    "answer": "D",
+    "text_a": "以下哪项不属于导游人员的职责？",
+    "text_b": "以下哪项不属于导游人员的业务素质？",
+    "file_a": "questions_3.json",
+    "file_b": "questions_3.json"
+  },
+  {
+    "sim": 0.8,
+    "id_a": 14045,
+    "id_b": 103967,
+    "qtype": 1,
+    "answer": "B",
+    "text_a": "介绍杭州西湖时，先从其概况、传说、成因讲起，继而带出“一山、二堤、三岛”，这种讲解方法称为（ ）。",
+    "text_b": "介绍杭州西湖时，先从其概况、传说、成因讲起，继而讲解湖中景物。这种讲解方法称为（  ）。",
+    "file_a": "questions_2.json",
+    "file_b": "questions_2.json"
+  },
+  {
+    "sim": 0.8,
+    "id_a": 105009,
+    "id_b": 105015,
+    "qtype": 1,
+    "answer": "D",
+    "text_a": "导游人员在进行导游服务时，应遵循的原则是？",
+    "text_b": "导游人员在进行导游服务时，应遵守的时间观念是？",
+    "file_a": "questions_3.json",
+    "file_b": "questions_3.json"
+  },
+  {
+    "sim": 0.8,
+    "id_a": 105012,
+    "id_b": 105073,
+    "qtype": 1,
+    "answer": "D",
+    "text_a": "以下哪项不属于导游人员的职责？",
+    "text_b": "以下哪项不属于导游人员的业务范围？",
+    "file_a": "questions_3.json",
     "file_b": "questions_3.json"
   },
   {
@@ -859,6 +1079,17 @@
   },
   {
     "sim": 0.8,
+    "id_a": 104465,
+    "id_b": 104634,
+    "qtype": 3,
+    "answer": "正确",
+    "text_a": "云南是中国少数民族种类最多的省份，其中彝族人口最多。",
+    "text_b": "云南是中国少数民族种类最多的省份。",
+    "file_a": "questions_4.json",
+    "file_b": "questions_4.json"
+  },
+  {
+    "sim": 0.8,
     "id_a": 105008,
     "id_b": 105030,
     "qtype": 1,
@@ -881,17 +1112,6 @@
   },
   {
     "sim": 0.8,
-    "id_a": 105008,
-    "id_b": 105031,
-    "qtype": 1,
-    "answer": "C",
-    "text_a": "以下哪项不属于导游人员的权利？",
-    "text_b": "以下哪项不属于导游人员的法律意识？",
-    "file_a": "questions_3.json",
-    "file_b": "questions_3.json"
-  },
-  {
-    "sim": 0.8,
     "id_a": 105007,
     "id_b": 105009,
     "qtype": 1,
@@ -899,17 +1119,6 @@
     "text_a": "导游人员在进行导游服务时，应遵守的法律法规是？",
     "text_b": "导游人员在进行导游服务时，应遵循的原则是？",
     "file_a": "questions_1.json",
-    "file_b": "questions_3.json"
-  },
-  {
-    "sim": 0.8,
-    "id_a": 105012,
-    "id_b": 105026,
-    "qtype": 1,
-    "answer": "D",
-    "text_a": "以下哪项不属于导游人员的职责？",
-    "text_b": "以下哪项不属于导游人员的业务知识？",
-    "file_a": "questions_3.json",
     "file_b": "questions_3.json"
   },
   {
@@ -925,12 +1134,45 @@
   },
   {
     "sim": 0.8,
-    "id_a": 105012,
-    "id_b": 105032,
+    "id_a": 105008,
+    "id_b": 105031,
+    "qtype": 1,
+    "answer": "C",
+    "text_a": "以下哪项不属于导游人员的权利？",
+    "text_b": "以下哪项不属于导游人员的法律意识？",
+    "file_a": "questions_3.json",
+    "file_b": "questions_3.json"
+  },
+  {
+    "sim": 0.8,
+    "id_a": 105013,
+    "id_b": 105015,
     "qtype": 1,
     "answer": "D",
-    "text_a": "以下哪项不属于导游人员的职责？",
-    "text_b": "以下哪项不属于导游人员的沟通技巧？",
+    "text_a": "导游人员在进行导游服务时，应遵循的礼仪是？",
+    "text_b": "导游人员在进行导游服务时，应遵守的时间观念是？",
+    "file_a": "questions_3.json",
+    "file_b": "questions_3.json"
+  },
+  {
+    "sim": 0.8,
+    "id_a": 15693,
+    "id_b": 17587,
+    "qtype": 2,
+    "answer": "ACD",
+    "text_a": "在旅游团离开各地之前，全陪主要进行的工作有（ ）",
+    "text_b": "在旅游团离开各地之前,全陪应进行如下工作（ ）。",
+    "file_a": "questions_2.json",
+    "file_b": "questions_2.json"
+  },
+  {
+    "sim": 0.8,
+    "id_a": 103739,
+    "id_b": 104819,
+    "qtype": 1,
+    "answer": "A",
+    "text_a": "2013年秋，国家主席习近平在哈萨克斯坦和印度尼西亚先后提出共建\"丝绸之路经济带\"和\"21世纪海上丝绸之路\"。其中\"21世纪海上丝绸之路\"是在（ ）提出的。",
+    "text_b": "2013年秋，国家主席习近平在哈萨克斯坦和（ ）先后提出共建“丝绸之路经济带”和“21世纪海上丝绸之路”。",
     "file_a": "questions_3.json",
     "file_b": "questions_3.json"
   },
@@ -947,14 +1189,14 @@
   },
   {
     "sim": 0.8,
-    "id_a": 15693,
-    "id_b": 17587,
-    "qtype": 2,
-    "answer": "ACD",
-    "text_a": "在旅游团离开各地之前，全陪主要进行的工作有（ ）",
-    "text_b": "在旅游团离开各地之前,全陪应进行如下工作（ ）。",
-    "file_a": "questions_2.json",
-    "file_b": "questions_2.json"
+    "id_a": 105012,
+    "id_b": 105032,
+    "qtype": 1,
+    "answer": "D",
+    "text_a": "以下哪项不属于导游人员的职责？",
+    "text_b": "以下哪项不属于导游人员的沟通技巧？",
+    "file_a": "questions_3.json",
+    "file_b": "questions_3.json"
   },
   {
     "sim": 0.8,
@@ -980,68 +1222,13 @@
   },
   {
     "sim": 0.8,
-    "id_a": 105012,
-    "id_b": 105014,
+    "id_a": 102292,
+    "id_b": 104055,
     "qtype": 1,
-    "answer": "D",
-    "text_a": "以下哪项不属于导游人员的职责？",
-    "text_b": "以下哪项不属于导游人员的业务素质？",
-    "file_a": "questions_3.json",
-    "file_b": "questions_3.json"
-  },
-  {
-    "sim": 0.8,
-    "id_a": 103739,
-    "id_b": 104819,
-    "qtype": 1,
-    "answer": "A",
-    "text_a": "2013年秋，国家主席习近平在哈萨克斯坦和印度尼西亚先后提出共建\"丝绸之路经济带\"和\"21世纪海上丝绸之路\"。其中\"21世纪海上丝绸之路\"是在（ ）提出的。",
-    "text_b": "2013年秋，国家主席习近平在哈萨克斯坦和（ ）先后提出共建“丝绸之路经济带”和“21世纪海上丝绸之路”。",
-    "file_a": "questions_3.json",
-    "file_b": "questions_3.json"
-  },
-  {
-    "sim": 0.8,
-    "id_a": 105009,
-    "id_b": 105015,
-    "qtype": 1,
-    "answer": "D",
-    "text_a": "导游人员在进行导游服务时，应遵循的原则是？",
-    "text_b": "导游人员在进行导游服务时，应遵守的时间观念是？",
-    "file_a": "questions_3.json",
-    "file_b": "questions_3.json"
-  },
-  {
-    "sim": 0.8,
-    "id_a": 104465,
-    "id_b": 104634,
-    "qtype": 3,
-    "answer": "正确",
-    "text_a": "云南是中国少数民族种类最多的省份，其中彝族人口最多。",
-    "text_b": "云南是中国少数民族种类最多的省份。",
-    "file_a": "questions_4.json",
-    "file_b": "questions_4.json"
-  },
-  {
-    "sim": 0.8,
-    "id_a": 105012,
-    "id_b": 105073,
-    "qtype": 1,
-    "answer": "D",
-    "text_a": "以下哪项不属于导游人员的职责？",
-    "text_b": "以下哪项不属于导游人员的业务范围？",
-    "file_a": "questions_3.json",
-    "file_b": "questions_3.json"
-  },
-  {
-    "sim": 0.8,
-    "id_a": 105013,
-    "id_b": 105015,
-    "qtype": 1,
-    "answer": "D",
-    "text_a": "导游人员在进行导游服务时，应遵循的礼仪是？",
-    "text_b": "导游人员在进行导游服务时，应遵守的时间观念是？",
-    "file_a": "questions_3.json",
-    "file_b": "questions_3.json"
+    "answer": "C",
+    "text_a": "导游人员进行导游活动时未佩戴导游证的，由旅游行政管理部门责令改正；（ ）的，处500元以下的罚款。",
+    "text_b": "导游人员进行导游活动时未佩戴导游证的，由旅游行政管理部门责令改正；拒不改正的，给予警告或（  ）处罚。",
+    "file_a": "questions_1.json",
+    "file_b": "questions_1.json"
   }
 ]

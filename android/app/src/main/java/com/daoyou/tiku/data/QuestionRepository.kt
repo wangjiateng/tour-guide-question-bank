@@ -1,8 +1,10 @@
 package com.daoyou.tiku.data
 
 import android.content.Context
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 
 /**
  * 题库仓库：从 APK 内置 assets/data 目录 JSON 加载题库（16MB 全量离线）。
@@ -57,8 +59,13 @@ object QuestionRepository {
         loadManifest() // 先确保版本源就绪
         mutex.withLock {
             subjectCache[key]?.let { return it }
-            val text = assets.open("data/questions_$key.json").bufferedReader().use { it.readText() }
-            val f = quizJson.decodeFromString(QuestionsFile.serializer(), text)
+            // 大文件（单科目最大 6MB）解析移出主线程，避免冷启动/首刷卡顿
+            val text = withContext(Dispatchers.IO) {
+                assets.open("data/questions_$key.json").bufferedReader().use { it.readText() }
+            }
+            val f = withContext(Dispatchers.Default) {
+                quizJson.decodeFromString(QuestionsFile.serializer(), text)
+            }
             // years 归一化已在反序列化时由 FlexibleYearsSerializer 完成
             subjectCache[key] = f.questions
             return f.questions
