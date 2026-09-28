@@ -13,8 +13,8 @@ android {
         applicationId = "com.daoyou.tiku"
         minSdk = 24
         targetSdk = 36
-        versionCode = 3
-        versionName = "1.2"
+        versionCode = 4
+        versionName = "1.3"
     }
 
     buildTypes {
@@ -35,6 +35,15 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
+    }
+}
+
+// 仅保留 release 变体：禁用 debug（仓库约定只打 release 包，见 AGENTS.md §2/§6）。
+// 效果：assembleDebug / installDebug / testDebugUnitTest 等 debug 任务不再生成，
+// 想打 debug 包只能临时注释掉本块（AGP 在配置阶段就会忽略 debug 变体）。
+androidComponents {
+    beforeVariants(selector().all()) { variant ->
+        if (variant.buildType == "debug") variant.enable = false
     }
 }
 

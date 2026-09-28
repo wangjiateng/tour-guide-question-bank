@@ -208,4 +208,4 @@ class ExamcooPaper:
 2. `_PAPER_TITLE_SUBJECTS` 中「地方…」必须先于「基础知识…」→ 改规则用真实试卷标题验证
 3. 题级关键词只用复合词，裸「法/方法/做法」会误分类业务题
 4. answer 存储/导出格式（判断题中文、多选字母串）不可改——客户端判分与其强耦合
-5. 改任何数据定义后：直接编辑 `data/*.json`，然后 `cd android && ./gradlew assembleDebug` 验证 APK 可正常构建
+5. 改任何数据定义后：直接编辑 `data/*.json`，然后 `cd android && ./gradlew assembleRelease` 验证 APK 可正常构建

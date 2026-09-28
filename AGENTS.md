@@ -33,15 +33,17 @@ data/*.json（题库 JSON 唯一事实源：AI 直接读取真实文件内容维
 
 ```bash
 cd android
-JAVA_HOME=/iCoding/java/jdk-21 ./gradlew assembleDebug
-# 产物：android/app/build/outputs/apk/debug/app-debug.apk（约 18.5MB，minSdk 24 / targetSdk 36）
+JAVA_HOME=/iCoding/java/jdk-21 ./gradlew assembleRelease
+# 产物：android/app/build/outputs/apk/release/app-release.apk（约 18MB，minSdk 24 / targetSdk 36）
 
 # 其他常用
 ./gradlew clean                      # 清理构建产物
-./gradlew installDebug               # 连真机/模拟器直接安装（adb）
+./gradlew installRelease             # 连真机/模拟器直接安装（adb）
 ```
 
-- **任何改动：`assembleDebug` 编译通过才算通过**（Kotlin 编译 + 资源打包全关卡）
+- **只打 release 包**：一律 `assembleRelease`。release 走 debug 签名（见 §3 `build.gradle.kts`），可直接安装分发、无调试开销
+- **debug 变体已在构建配置层禁用**：`app/build.gradle.kts` 的 `androidComponents { beforeVariants { ... } }` 关掉了 debug，`assembleDebug`/`installDebug` 等 debug 任务根本不会生成（临时需要 debug 包时，注释掉该块即可）
+- **任何改动：`assembleRelease` 编译通过才算通过**（Kotlin 编译 + 资源打包 + lintVital 全关卡）
 - 本仓库**无单元测试框架**：验证关卡即编译通过 + 真机手动验证（改 UI 布局后必须真机实测）
 - 构建时 `copyQuizData` 任务把仓库根 `data/` 复制进 `android/app/src/main/assets/data/`（该副本被 `android/.gitignore` 排除，不入库）
 
@@ -90,7 +92,8 @@ JAVA_HOME=/iCoding/java/jdk-21 ./gradlew assembleDebug
 - **出现次数平衡**：答题与笔试均按历史出现次数平衡抽取（出现少的题优先、抽后计数 +1，`RecordsStore.appearCount` / `bumpAppear`）
 - **错题加权（本端增强）**：`QuizBuilder.pickBalanced` 对错题按「出现次数等效 −1」加权，优先抽中重现
 - **错题毕业**：最后一次答错后连续答对 `RecordsStore.GRADUATE_STREAK`（5）次即移出错题本与组卷加权
-- **笔试错题收集**：笔试判错的题即收进错题本（答对不记，避免整卷污染答题历史）；错题在笔试中答对也单独记录以推进毕业计数
+- **作答记录只记答错**（答题页与笔试页一致）：答对不写记录，避免污染答题历史；例外是已在错题本中的题答对也记录一条，用于推进「连续答对 5 次毕业」计数（`README` 口径：错题池 = 答错去重 + 毕业判定）
+- **笔试错题收集**：笔试判错的题即收进错题本（答对不记）；错题在笔试中答对也单独记录以推进毕业计数
 - 浏览未指定年份默认只显示近三年
 
 ## 5. 数据文件格式（data/*.json，AI 维护依据）
@@ -119,7 +122,7 @@ JAVA_HOME=/iCoding/java/jdk-21 ./gradlew assembleDebug
 
 ## 6. Coding Conventions
 
-- 任何改动：`cd android && ./gradlew assembleDebug` 编译通过才算通过；改 UI 布局后**必须真机实测**（无自动化 UI 测试）
+- 任何改动：`cd android && ./gradlew assembleRelease` 编译通过才算通过（**只保留 release 变体，debug 变体已禁用**）；改 UI 布局后**必须真机实测**（无自动化 UI 测试）
 - Kotlin + Jetpack Compose（Material 3）；类型集中 `data/Models.kt`，数据访问走 `QuestionRepository`（不裸读 assets）
 - 领域词汇固定：`subject`（科目 1-4）、`qType`（1 单选 / 2 多选 / 3 判断，JSON 侧为 `q_type`）
 - 数据文件用 UTF-8 无 BOM、`ensure_ascii=False` 风格（中文可读），编辑时保持
@@ -129,7 +132,7 @@ JAVA_HOME=/iCoding/java/jdk-21 ./gradlew assembleDebug
 
 - 提交信息参照现有风格：`<范围> [类型] 摘要`，类型标签用 `[Feature]` / `[Fix]` / `[Docs]` 等（历史示例：`E2E-Efficiency [Feature] 导游题库全栈实现：…（CR P0）`、`Android [Feature] 原生安卓客户端：Kotlin + Compose 全量实现`）
 - 未提交的文档/题库改动（如 `CRAWLER_DATA.md`、`data/*.json`）随功能一并提交，避免长期遗留工作区
-- 无 CI / 无自动部署：APK 由本地 `assembleDebug` 构建后手动分发
+- 无 CI / 无自动部署：APK 由本地 `assembleRelease` 构建后手动分发
 
 ## 8. Boundaries（禁止事项与安全）
 
@@ -152,15 +155,15 @@ JAVA_HOME=/iCoding/java/jdk-21 ./gradlew assembleDebug
 ## 10. Common Operations
 
 ```bash
-# 构建 / 安装
-cd android && JAVA_HOME=/iCoding/java/jdk-21 ./gradlew assembleDebug   # APK → app/build/outputs/apk/debug/
-cd android && JAVA_HOME=/iCoding/java/jdk-21 ./gradlew installDebug    # 直接装到已连接设备
+# 构建 / 安装（统一 release 包，不要打 debug）
+cd android && JAVA_HOME=/iCoding/java/jdk-21 ./gradlew assembleRelease   # APK → app/build/outputs/apk/release/
+cd android && JAVA_HOME=/iCoding/java/jdk-21 ./gradlew installRelease    # 直接装到已连接设备
 
 # 更新题库（AI 维护）
 # 1. 读取 data/questions_X.json 真实内容
 # 2. 增改题目（对照现有 question_text 查重，保持 id 升序）
 # 3. 更新 manifest.json 的 total/per_subject/generated_at
-# 4. cd android && ./gradlew assembleDebug → 产物分发
+# 4. cd android && ./gradlew assembleRelease → 产物分发
 
 # 题库去重（多源采集后必跑；四段式，精确优先；数据目录 = 仓库根 data/）
 python3 scripts/dedup/dedup_pipeline.py --dry-run   # 出报告不修改（推荐先跑）

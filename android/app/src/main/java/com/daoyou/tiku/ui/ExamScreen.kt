@@ -6,23 +6,30 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -44,11 +51,14 @@ import kotlinx.coroutines.launch
 
 /** 在线笔试模拟：两套卷（科目一+二 / 科目三+四），165 题 / 100 分 / 90 分钟。 */
 @Composable
-fun ExamScreen() {
+fun ExamScreen(onFullScreen: (Boolean) -> Unit) {
     var paper by remember { mutableStateOf<ExamPaper?>(null) }
     var result by remember { mutableStateOf<ExamResult?>(null) }
     var loading by remember { mutableStateOf(false) }
     val scope = androidx.compose.runtime.rememberCoroutineScope()
+
+    // 考试进行中 → 全屏（App 隐藏底部导航，禁止切换页签）；交卷出结果后恢复
+    LaunchedEffect(paper != null) { onFullScreen(paper != null) }
 
     when {
         paper == null && result == null -> {
@@ -109,18 +119,21 @@ fun ExamScreen() {
 
 /**
  * 答题执行器：逐题判定——
- * 单选/判断点选即判；多选勾选后点「确认答案」判定；已判题可改答案重判；
- * 翻页/跳题/交卷前自动补判未确认的多选；题号导航区分 当前/对/错/已答。
+ * 单选/判断点选即判；多选勾选后点「确认答案」判定；已判题可改答案重判（改选自动清除旧判定）；
+ * 多选未点确认的勾选也会计入交卷判分；题号导航区分 当前/对/错/已答。
+ * 翻页用 HorizontalPager：左右滑动无缝切换（无 pageSpacing，页面首尾相接），
+ * 上一题/下一题/题号导航均驱动同一个分页器并带过渡动画。
  */
 @Composable
 private fun ExamRunner(paper: ExamPaper, onSubmitted: (ExamResult) -> Unit) {
-    var index by remember { mutableIntStateOf(0) }
     var answers by remember { mutableStateOf<Map<Long, String>>(emptyMap()) }
     var verdicts by remember { mutableStateOf<Map<Long, Boolean>>(emptyMap()) }
     var checkedMap by remember { mutableStateOf<Map<Long, ExamCheckResult>>(emptyMap()) }
     var showNav by remember { mutableStateOf(false) }
     var finished by remember { mutableStateOf(false) }
     var remaining by remember { mutableIntStateOf(paper.minutes * 60) }
+    val pagerState = rememberPagerState(pageCount = { paper.questions.size })
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
 
     // 判定指定题（answer 返回原始存储答案：判断题「正确/错误」）
     fun judge(qid: Long) {
@@ -141,10 +154,17 @@ private fun ExamRunner(paper: ExamPaper, onSubmitted: (ExamResult) -> Unit) {
         }
     }
 
-    // 离开当前题/交卷前自动补判未确认的多选（保证题号导航与统计一致）
-    fun commitCurrent() {
-        val cur = paper.questions.getOrNull(index) ?: return
-        if (cur.qType == 2 && cur.id !in verdicts && answers.containsKey(cur.id)) judge(cur.id)
+    // 改答案：清除该题判定（多选回到可勾选态；单选/判断改选后立即重判）
+    fun reopen(qid: Long) {
+        verdicts = verdicts - qid
+        checkedMap = checkedMap - qid
+    }
+
+    // 交卷：answers 里所有选题（含未点确认的多选）都会计入判分
+    fun submitNow() {
+        finished = true
+        val r = ExamEngine.examSubmit(paper.paperId, answers.map { it.key to it.value })
+        if (r != null) onSubmitted(r)
     }
 
     LaunchedEffect(Unit) {
@@ -155,64 +175,27 @@ private fun ExamRunner(paper: ExamPaper, onSubmitted: (ExamResult) -> Unit) {
     }
     // 时间到自动交卷
     LaunchedEffect(remaining) {
-        if (remaining == 0 && !finished) {
-            finished = true
-            val r = ExamEngine.examSubmit(paper.paperId, answers.map { it.key to it.value })
-            if (r != null) onSubmitted(r)
-        }
+        if (remaining == 0 && !finished) submitNow()
     }
 
-    val cur = paper.questions[index]
     val mm = (remaining / 60).toString().padStart(2, '0')
     val ss = (remaining % 60).toString().padStart(2, '0')
-    val answeredCount = answers.size
-    val correctCount = verdicts.count { it.value }
-    val wrongCount = verdicts.count { !it.value }
-    val verdict = verdicts[cur.id]
-    val checkedResult = checkedMap[cur.id]
-    // 高亮用归一化字母（判断题「正确/错误」→ A/B），显示用原始存储答案
-    val normRef = checkedResult?.answer?.uppercase()?.let { raw ->
-        if (cur.qType == 3) (if (raw.contains("正确")) "A" else if (raw.contains("错误")) "B" else raw)
-        else raw.replace(",", "")
-    } ?: ""
 
     Column(
-        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
+        modifier = Modifier.fillMaxSize().padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                "已答 $answeredCount/${paper.total} · 对 $correctCount 错 $wrongCount",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.outline,
-            )
-            Text(
-                text = "$mm:$ss",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = if (remaining < 300) Color(0xFFD32F2F) else MaterialTheme.colorScheme.primary,
-            )
-        }
+        ExamHeader(pagerState, paper, answers, verdicts, "$mm:$ss", remaining)
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            OutlinedButton(onClick = { commitCurrent(); showNav = !showNav }) {
+            OutlinedButton(onClick = { showNav = !showNav }) {
                 Text(if (showNav) "收起题号" else "题号导航")
             }
-            Button(enabled = !finished, onClick = {
-                commitCurrent()
-                finished = true
-                val r = ExamEngine.examSubmit(paper.paperId, answers.map { it.key to it.value })
-                if (r != null) onSubmitted(r)
-            }) { Text("结束考试") }
+            Button(enabled = !finished, onClick = { submitNow() }) { Text("结束考试") }
         }
         if (showNav) {
             LazyVerticalGrid(
                 columns = GridCells.Fixed(8),
-                // 有界高度必需：垂直懒加载组件嵌在 verticalScroll 容器内时，
-                // 无限高度约束会直接 IllegalStateException 崩溃（故用 heightIn 限高）
+                // 有界高度必需：垂直懒加载组件嵌在普通 Column 内不会自动限高，故用 heightIn 限高
                 modifier = Modifier.fillMaxWidth().heightIn(max = 320.dp).padding(vertical = 4.dp),
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalArrangement = Arrangement.spacedBy(6.dp),
@@ -220,8 +203,9 @@ private fun ExamRunner(paper: ExamPaper, onSubmitted: (ExamResult) -> Unit) {
                 items(paper.questions.size) { i ->
                     val q = paper.questions[i]
                     val v = verdicts[q.id]
+                    val isCurrent = pagerState.currentPage == i
                     val bg = when {
-                        i == index -> MaterialTheme.colorScheme.primary
+                        isCurrent -> MaterialTheme.colorScheme.primary
                         v == true -> JudgeColors.correctBg
                         v == false -> JudgeColors.wrongBg
                         answers.containsKey(q.id) -> MaterialTheme.colorScheme.primaryContainer
@@ -231,19 +215,114 @@ private fun ExamRunner(paper: ExamPaper, onSubmitted: (ExamResult) -> Unit) {
                         modifier = Modifier
                             .size(36.dp)
                             .background(bg, CircleShape)
-                            .clickable { commitCurrent(); index = i },
+                            .clickable { scope.launch { pagerState.animateScrollToPage(i) } },
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(
                             text = "${i + 1}",
                             style = MaterialTheme.typography.labelSmall,
-                            color = if (i == index) MaterialTheme.colorScheme.onPrimary
+                            color = if (isCurrent) MaterialTheme.colorScheme.onPrimary
                             else MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }
             }
         }
+        HorizontalPager(
+            state = pagerState,
+            beyondViewportPageCount = 1,
+            modifier = Modifier.fillMaxWidth().weight(1f),
+        ) { p ->
+            ExamQuestionPage(
+                paper = paper,
+                index = p,
+                answers = answers,
+                verdicts = verdicts,
+                checkedMap = checkedMap,
+                finished = finished,
+                onAnswered = { qid, value -> answers = if (value == null) answers - qid else answers + (qid to value) },
+                onJudge = { judge(it) },
+                onReopen = { reopen(it) },
+            )
+        }
+        ExamBottomBar(
+            pagerState = pagerState,
+            total = paper.total,
+            scope = scope,
+            onSubmit = { submitNow() },
+        )
+    }
+}
+
+/** 顶部统计 + 倒计时：内部经 derivedStateOf 读取当前页，滑动中外层组合作用域不重组。 */
+@Composable
+private fun ExamHeader(
+    pagerState: PagerState,
+    paper: ExamPaper,
+    answers: Map<Long, String>,
+    verdicts: Map<Long, Boolean>,
+    timeText: String,
+    remaining: Int,
+) {
+    val page by remember(pagerState) { derivedStateOf { pagerState.currentPage } }
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                "第 ${page + 1}/${paper.total} 题 · 已答 ${answers.size} · 对 ${verdicts.count { it.value }} 错 ${verdicts.count { !it.value }}",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.outline,
+            )
+            Text(
+                text = timeText,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = if (remaining < 300) Color(0xFFD32F2F) else MaterialTheme.colorScheme.primary,
+            )
+        }
+        // 作答时视觉反馈当前进度（细进度条，不占高）
+        LinearProgressIndicator(
+            progress = { (page + 1f) / paper.total },
+            modifier = Modifier.fillMaxWidth().height(4.dp),
+        )
+    }
+}
+
+/** 单个笔试题页：页内纵向滚动（题干 + 选项 + 解析都在页内），重组粒度=单页。 */
+@Composable
+private fun ExamQuestionPage(
+    paper: ExamPaper,
+    index: Int,
+    answers: Map<Long, String>,
+    verdicts: Map<Long, Boolean>,
+    checkedMap: Map<Long, ExamCheckResult>,
+    finished: Boolean,
+    onAnswered: (Long, String?) -> Unit,
+    onJudge: (Long) -> Unit,
+    onReopen: (Long) -> Unit,
+) {
+    val cur = paper.questions[index]
+    val verdict = verdicts[cur.id]
+    val checkedResult = checkedMap[cur.id]
+    // 高亮用归一化字母（判断题「正确/错误」→ A/B），显示用原始存储答案
+    val normRef = checkedResult?.answer?.uppercase()?.let { raw ->
+        if (cur.qType == 3) (if (raw.contains("正确")) "A" else if (raw.contains("错误")) "B" else raw)
+        else raw.replace(",", "")
+    } ?: ""
+    // 已选的字母集合（多选为未判定的临时勾选串，单选/判断为已提交答案）
+    val selected = answers[cur.id]?.map { it.toString() }?.toSet() ?: emptySet()
+
+    Column(
+        // 铺满页面底色：翻页时相邻页无缝隙、无露底黑框
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
         QuestionCard(
             q = Question(
                 id = cur.id, questionText = cur.questionText, optionA = cur.options.getOrNull(0),
@@ -251,7 +330,7 @@ private fun ExamRunner(paper: ExamPaper, onSubmitted: (ExamResult) -> Unit) {
                 optionD = cur.options.getOrNull(3), optionE = cur.options.getOrNull(4),
                 qType = cur.qType, subject = cur.subject, years = cur.years,
             ),
-            selected = answers[cur.id]?.map { it.toString() }?.toSet() ?: emptySet(),
+            selected = selected,
             revealed = verdict != null,
             correctRef = normRef,
             explanation = checkedResult?.explanation,
@@ -260,23 +339,21 @@ private fun ExamRunner(paper: ExamPaper, onSubmitted: (ExamResult) -> Unit) {
             onSelect = { letter ->
                 if (finished) return@QuestionCard
                 val qid = cur.id
-                // 已判题改答案：清除判定，改完重判
-                if (qid in verdicts) {
-                    verdicts = verdicts - qid
-                    checkedMap = checkedMap - qid
-                }
                 if (cur.qType == 2) {
+                    // 多选：勾选写入 answers（未确认），已判定则先清除判定再改
+                    if (qid in verdicts) onReopen(qid)
                     val set = answers[qid]?.map { it.toString() }?.toSet() ?: emptySet()
                     val next = if (letter in set) set - letter else set + letter
-                    answers = if (next.isEmpty()) answers - qid else answers + (qid to next.sorted().joinToString(""))
-                    // 多选：勾选不自动判，选好后点「确认答案」
+                    onAnswered(qid, if (next.isEmpty()) null else next.sorted().joinToString(""))
+                    // 选好后点「确认答案」判定
                 } else {
-                    answers = answers + (qid to letter)
-                    judge(qid) // 单选/判断点选即判
+                    // 单选/判断点选即判；改选自动覆盖旧判定
+                    onAnswered(qid, letter)
+                    onJudge(qid)
                 }
             },
         )
-        // 多选确认按钮（未判定且有选择时）
+        // 多选确认按钮（未判定且有勾选时）
         if (cur.qType == 2 && verdict == null && !finished) {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
@@ -285,8 +362,8 @@ private fun ExamRunner(paper: ExamPaper, onSubmitted: (ExamResult) -> Unit) {
                     color = MaterialTheme.colorScheme.outline,
                 )
                 Button(
-                    enabled = answers.containsKey(cur.id),
-                    onClick = { judge(cur.id) },
+                    enabled = selected.isNotEmpty(),
+                    onClick = { onJudge(cur.id) },
                 ) { Text("确认答案") }
             }
         }
@@ -299,11 +376,32 @@ private fun ExamRunner(paper: ExamPaper, onSubmitted: (ExamResult) -> Unit) {
                 color = if (verdict) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
             )
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            OutlinedButton(enabled = index > 0, onClick = { commitCurrent(); index -= 1 }) { Text("上一题") }
-            if (index + 1 < paper.total) {
-                Button(onClick = { commitCurrent(); index += 1 }) { Text("下一题") }
-            }
+        Spacer(Modifier.height(4.dp))
+    }
+}
+
+/** 笔试底部翻页栏：内部经 derivedStateOf 读取当前页。 */
+@Composable
+private fun ExamBottomBar(
+    pagerState: PagerState,
+    total: Int,
+    scope: kotlinx.coroutines.CoroutineScope,
+    onSubmit: () -> Unit,
+) {
+    val page by remember(pagerState) { derivedStateOf { pagerState.currentPage } }
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        OutlinedButton(
+            enabled = page > 0,
+            onClick = { scope.launch { pagerState.animateScrollToPage(page - 1) } },
+        ) { Text("上一题") }
+        if (page + 1 < total) {
+            Button(onClick = { scope.launch { pagerState.animateScrollToPage(page + 1) } }) { Text("下一题") }
+        } else {
+            Button(onClick = onSubmit) { Text("交卷") }
         }
+        Spacer(Modifier.weight(1f))
     }
 }

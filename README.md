@@ -45,8 +45,8 @@
 
 ```bash
 cd android
-JAVA_HOME=/iCoding/java/jdk-21 ./gradlew assembleDebug
-# 产物：android/app/build/outputs/apk/debug/app-debug.apk（约 18.5MB，minSdk 24 / targetSdk 36）
+JAVA_HOME=/iCoding/java/jdk-21 ./gradlew assembleRelease
+# 产物：android/app/build/outputs/apk/release/app-release.apk（约 18MB，minSdk 24 / targetSdk 36）
 ```
 
 构建时 Gradle 任务 `copyQuizData` 会把仓库根 `data/` 的题库 JSON 复制进 `android/app/src/main/assets/data/`（该副本不入 git，唯一事实源始终是 `data/`）。本机构建环境注意事项见 [AGENTS.md](AGENTS.md) §11。

@@ -326,10 +326,11 @@ fun QuestionCard(
     /** 已判定后是否允许改选（笔试可改答案重判）。 */
     allowReanswer: Boolean = false,
 ) {
+    // 无边框无阴影：容器底色与页面底色一致，HorizontalPager 滑动时相邻页不露黑边、衔接连贯
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {
         Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             TypeBadge(q.qType)

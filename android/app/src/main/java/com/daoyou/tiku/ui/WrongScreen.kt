@@ -152,7 +152,6 @@ fun WrongScreen(activeSubject: Int?) {
                 }
                 HorizontalPager(
                     state = pagerState,
-                    pageSpacing = 12.dp,
                     beyondViewportPageCount = 1,
                     modifier = Modifier.fillMaxWidth().weight(1f),
                 ) { p ->

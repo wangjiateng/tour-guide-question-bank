@@ -380,7 +380,7 @@ def main():
         if len(final) != report['total_after']:
             raise ValueError(f"写回对账失败: 预期 {report['total_after']} 题，实际 {len(final)} 题")
         save_all(final)
-        print('\n已写回数据文件。请更新 manifest.json 计数，然后 cd android && ./gradlew assembleDebug 重新构建 APK。')
+        print('\n已写回数据文件。请更新 manifest.json 计数，然后 cd android && ./gradlew assembleRelease 重新构建 APK。')
     else:
         print('\nDRY-RUN 完成，未修改任何文件。确认后加 --apply 执行。')
 
