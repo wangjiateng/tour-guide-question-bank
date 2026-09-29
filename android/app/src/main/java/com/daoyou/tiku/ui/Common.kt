@@ -12,16 +12,24 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -172,27 +180,28 @@ private fun TypeBadge(qType: Int?) {
 }
 
 /**
- * 试题列表面板（对齐官方机考）：题号按题型分组（判断/单选/多选），四态着色，点击跳题。
- * results：各题判定结果（null=未作答）；marked：被标记的题目下标集合；current：当前题下标。
+ * 题号面板的内容：按题型分组 + 四态着色 + 点击跳题。
+ *
+ * 每个格子在自己的 `@Composable` 作用域里读取 `pagerState.currentPage` 与 `marked`——
+ * 调用方只需传稳定的 `pagerState`/`SnapshotStateList` 引用，切题时**不会**失效
+ * 承载面板的父作用域（此前 current 由父层读入，导致每次翻页整屏重组）。
+ * 分组下标按 questions 实例缓存（列表在会话内不变，避免每次切题重跑 3 遍 filter）。
  */
 @Composable
-fun QuestionNumberPanel(
+private fun NumberPanelContent(
     questions: List<Question>,
     results: List<Boolean?>,
-    marked: Set<Int>,
-    current: Int,
+    marked: SnapshotStateList<Int>,
+    pagerState: PagerState,
     onJump: (Int) -> Unit,
 ) {
-    @Composable
-    fun cellColor(idx: Int): Color = when {
-        idx == current -> MaterialTheme.colorScheme.primary
-        idx in marked -> Color(0xFFE53935)
-        results.getOrNull(idx) != null -> Color(0xFF43A047)
-        else -> MaterialTheme.colorScheme.surfaceVariant
+    val groups = remember(questions) {
+        listOf(3 to "判断题", 1 to "单选题", 2 to "多选题").map { (type, label) ->
+            label to questions.withIndex().filter { it.value.qType == type }.map { it.index }
+        }
     }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        listOf(3 to "判断题", 1 to "单选题", 2 to "多选题").forEach { (type, label) ->
-            val idxs = questions.withIndex().filter { it.value.qType == type }.map { it.index }
+        groups.forEach { (label, idxs) ->
             if (idxs.isEmpty()) return@forEach
             Text(
                 text = label,
@@ -202,23 +211,13 @@ fun QuestionNumberPanel(
             idxs.chunked(8).forEach { row ->
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     row.forEach { idx ->
-                        Box(
-                            modifier = Modifier
-                                .size(32.dp)
-                                .background(cellColor(idx), RoundedCornerShape(6.dp))
-                                .clickable { onJump(idx) },
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Text(
-                                text = "${idx + 1}",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = if (idx == current || idx in marked || results.getOrNull(idx) != null) {
-                                    Color.White
-                                } else {
-                                    MaterialTheme.colorScheme.onSurfaceVariant
-                                },
-                            )
-                        }
+                        QuestionNumberCell(
+                            index = idx,
+                            state = results.getOrNull(idx),
+                            marked = marked,
+                            pagerState = pagerState,
+                            onJump = onJump,
+                        )
                     }
                 }
             }
@@ -241,6 +240,55 @@ fun QuestionNumberPanel(
             }
         }
     }
+}
+
+/** 单个题号格：在自己的作用域内读当前页与标记集合，切题只重组受影响的两格。 */
+@Composable
+private fun QuestionNumberCell(
+    index: Int,
+    state: Boolean?,
+    marked: SnapshotStateList<Int>,
+    pagerState: PagerState,
+    onJump: (Int) -> Unit,
+) {
+    val current by remember(pagerState) { derivedStateOf { pagerState.currentPage } }
+    val isCurrent = index == current
+    val isMarked = index in marked
+    val filled = isCurrent || isMarked || state != null
+    val bg = when {
+        isCurrent -> MaterialTheme.colorScheme.primary
+        isMarked -> Color(0xFFE53935)
+        state != null -> Color(0xFF43A047)
+        else -> MaterialTheme.colorScheme.surfaceVariant
+    }
+    Box(
+        modifier = Modifier
+            .size(32.dp)
+            .background(bg, RoundedCornerShape(6.dp))
+            .clickable { onJump(index) },
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = "${index + 1}",
+            style = MaterialTheme.typography.labelSmall,
+            color = if (filled) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+/**
+ * 试题列表面板（对齐官方机考）：题号按题型分组（判断/单选/多选），四态着色，点击跳题。
+ * results：各题判定结果（null=未作答）；marked：被标记的题目下标集合。
+ */
+@Composable
+fun QuestionNumberPanel(
+    questions: List<Question>,
+    results: List<Boolean?>,
+    marked: SnapshotStateList<Int>,
+    pagerState: PagerState,
+    onJump: (Int) -> Unit,
+) {
+    NumberPanelContent(questions, results, marked, pagerState, onJump)
 }
 
 /**
@@ -439,4 +487,31 @@ fun BrowseQuestionCard(q: Question) {
             }
         }
     }
+}
+
+/**
+ * 「继续上次进度」全局弹窗：进程被杀重启后由 App 层在启动时弹出（不依赖进入对应页签），
+ * 提示未完成会话，由用户明确选择「继续」或「放弃」——不静默跳转，避免被动进入全屏答题页。
+ *
+ * 强制选择：`onDismissRequest` 置空，点弹窗外部/按返回键均不关闭，必须二选一。
+ *
+ * @param title 会话类型标题（如「未完成的练习」）
+ * @param detail 进度描述（如「科目三 · 第 3/8200 题 · 已答 5 题」）
+ * @param onResume 继续：恢复到上次题号与作答状态
+ * @param onDiscard 放弃：删除快照并回到初始页
+ */
+@Composable
+fun ResumeDialog(
+    title: String,
+    detail: String,
+    onResume: () -> Unit,
+    onDiscard: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = {},
+        title = { Text(title) },
+        text = { Text(detail) },
+        confirmButton = { Button(onClick = onResume) { Text("继续") } },
+        dismissButton = { OutlinedButton(onClick = onDiscard) { Text("放弃") } },
+    )
 }

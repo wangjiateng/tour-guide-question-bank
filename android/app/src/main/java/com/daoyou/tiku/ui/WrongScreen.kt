@@ -3,6 +3,7 @@ package com.daoyou.tiku.ui
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,6 +11,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
@@ -70,38 +73,44 @@ fun WrongScreen(activeSubject: Int?) {
     }
 
     when (mode) {
-        "list" -> Column(
-            modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(12.dp),
+        // 用 LazyColumn 而非 forEach：错题最多取 100 条，全量组合 100 张卡会拖慢首帧。
+        // 注意：LazyColumn 自身可滚动，外层**不能**再套 verticalScroll（嵌套纵向滚动会抛异常），
+        // 故列表分支的 padding/间距转由 contentPadding 与 verticalArrangement 承担。
+        "list" -> LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(12.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text("错题 $total 道", style = MaterialTheme.typography.titleMedium)
-                Text(
-                    text = "连续答对 ${RecordsStore.GRADUATE_STREAK} 次自动毕业",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.outline,
-                )
-                if (questions.isNotEmpty()) {
-                    Button(onClick = {
-                        mode = "drill"
-                        answers.clear(); answers.addAll(List(questions.size) { null })
-                        results.clear(); results.addAll(List(questions.size) { null })
-                        selections.clear()
-                        marked.clear()
-                        panelExpanded = false
-                    }) {
-                        Text("重练")
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text("错题 $total 道", style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        text = "连续答对 ${RecordsStore.GRADUATE_STREAK} 次自动毕业",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.outline,
+                    )
+                    if (questions.isNotEmpty()) {
+                        Button(onClick = {
+                            mode = "drill"
+                            answers.clear(); answers.addAll(List(questions.size) { null })
+                            results.clear(); results.addAll(List(questions.size) { null })
+                            selections.clear()
+                            marked.clear()
+                            panelExpanded = false
+                        }) {
+                            Text("重练")
+                        }
                     }
                 }
             }
             if (questions.isEmpty()) {
-                Text("暂无错题，去答题练一练吧", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                item { Text("暂无错题，去答题练一练吧", color = MaterialTheme.colorScheme.onSurfaceVariant) }
             }
-            questions.forEach { q -> BrowseQuestionCard(q) }
+            itemsIndexed(questions) { _, q -> BrowseQuestionCard(q) }
         }
 
         "done" -> Column(
@@ -144,8 +153,8 @@ fun WrongScreen(activeSubject: Int?) {
                         QuestionNumberPanel(
                             questions = questions,
                             results = results,
-                            marked = marked.toSet(),
-                            current = pagerState.currentPage,
+                            marked = marked,
+                            pagerState = pagerState,
                             onJump = { j -> scope.launch { pagerState.animateScrollToPage(j) } },
                         )
                     }

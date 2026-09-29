@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import com.daoyou.tiku.data.QuestionRepository
 import com.daoyou.tiku.data.RecordsStore
+import com.daoyou.tiku.data.SessionStore
 import com.daoyou.tiku.ui.DaoyouApp
 import com.daoyou.tiku.ui.DaoyouTheme
 
@@ -14,6 +15,7 @@ class MainApplication : Application() {
         super.onCreate()
         QuestionRepository.init(this)
         RecordsStore.init(this)
+        SessionStore.init(this)
     }
 }
 
@@ -30,7 +32,10 @@ class MainActivity : ComponentActivity() {
 
     override fun onStop() {
         super.onStop()
-        // 生命周期兜底：离开前台时把未落盘的记录/计数同步写盘，防进程被杀丢最近改动
-        RecordsStore.flushSync()
+        // 生命周期兜底：请求后台写盘（不阻塞主线程）。
+        // 活动期已有 400ms 防抖持续落盘，故这里用异步即可——进程被杀最多丢最近 <0.5s 改动，
+        // 而同步 runBlocking 会在主线程排队等待（可能排在一次在途的大写入之后），代价更大。
+        RecordsStore.requestFlush()
+        SessionStore.requestFlush()
     }
 }

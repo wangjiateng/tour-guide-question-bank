@@ -42,10 +42,12 @@ object QuizBuilder {
     fun <T : Question> pickBalanced(pool: List<T>, size: Int): List<T> {
         if (size <= 0) return emptyList()
         val wrong = RecordsStore.wrongIds()
+        // 一次性取出现次数快照：逐题调 appearCount 会造成上万次锁进出（池子可达数千）
+        val counts = RecordsStore.appearCounts()
         val byCount = sortedMapOf<Int, MutableList<T>>()
         for (t in pool) {
             // 错题加权：出现次数等效减一，排序上优先被抽中重现（对齐用户要求，原生端增强）
-            val c = RecordsStore.appearCount(t.id) - (if (t.id in wrong) 1 else 0)
+            val c = (counts[t.id] ?: 0) - (if (t.id in wrong) 1 else 0)
             byCount.getOrPut(c) { mutableListOf() }.add(t)
         }
         val out = mutableListOf<T>()
@@ -98,6 +100,23 @@ object QuizBuilder {
         )
         RecordsStore.bumpAppear(out.map { it.id })
         return out
+    }
+
+    /**
+     * 会话恢复：按持久化的题号序列从内置题库重取题目（顺序即卷面原顺序）。
+     *
+     * 答题页不限题量，故持久化只存题号而不存题目快照（否则每次作答要写数 MB）。
+     * 题库随 APK 分发、版本内 id 稳定，故按 id 重取即可完整还原同一套题。
+     *
+     * 任一 id 在本科目池中缺失即返回 null（题库更新导致 id 变更），由调用方放弃恢复并清掉过期快照。
+     * **不做全库回退**：回退会把五个科目文件一次性解码并永久留在 `QuestionRepository.subjectCache`
+     * （约 20MB 常驻堆），代价远高于让用户重新组卷。
+     */
+    suspend fun restoreQuiz(subject: Int, questionIds: List<Long>): List<Question>? {
+        if (questionIds.isEmpty()) return null
+        val byId = QuestionRepository.loadSubjects(listOf<Int?>(subject)).associateBy { it.id }
+        val picked = questionIds.mapNotNull { byId[it] }
+        return if (picked.size == questionIds.size) picked else null
     }
 
     /** 浏览：过滤 + 分页，按年份降序。（浏览页已移除，保留备用） */

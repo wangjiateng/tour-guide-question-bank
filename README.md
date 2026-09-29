@@ -41,15 +41,15 @@
 
 ## 构建 APK
 
-前置：JDK 21 + Android SDK（在 `android/local.properties` 写 `sdk.dir=/opt/android-sdk`）。
+前置：JDK 21 + 本地 Android SDK（在 `android/local.properties` 写 `sdk.dir` 指向 SDK 路径，该文件不入库）。
 
 ```bash
 cd android
-JAVA_HOME=/iCoding/java/jdk-21 ./gradlew assembleRelease
+./gradlew assembleRelease
 # 产物：android/app/build/outputs/apk/release/app-release.apk（约 18MB，minSdk 24 / targetSdk 36）
 ```
 
-构建时 Gradle 任务 `copyQuizData` 会把仓库根 `data/` 的题库 JSON 复制进 `android/app/src/main/assets/data/`（该副本不入 git，唯一事实源始终是 `data/`）。本机构建环境注意事项见 [AGENTS.md](AGENTS.md) §11。
+构建时 Gradle 任务 `copyQuizData` 会把仓库根 `data/` 的题库 JSON 复制进 `android/app/src/main/assets/data/`（该副本不入 git，唯一事实源始终是 `data/`）。
 
 ## 数据维护
 

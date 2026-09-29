@@ -19,6 +19,7 @@ import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonPrimitive
+import java.io.File
 
 /** 题库 JSON 统一解析配置：忽略未知字段（历史数据字段演进），宽松容错。 */
 val quizJson: Json = Json { ignoreUnknownKeys = true; isLenient = true }
@@ -71,10 +72,14 @@ data class Question(
     @SerialName("paper_title") val paperTitle: String? = null,
     @SerialName("source_url") val sourceUrl: String? = null,
 ) {
-    /** 选项列表：A-E 过滤空值与空串（历史数据存在 option_x="" 的脏值）。 */
-    val options: List<String>
-        get() = listOfNotNull(optionA, optionB, optionC, optionD, optionE)
-            .filter { it.isNotBlank() }
+    /**
+     * 选项列表：A-E 过滤空值与空串（历史数据存在 option_x="" 的脏值）。
+     * 用 `by lazy` 缓存——组卷筛选会对整池逐题访问（可达数千次），
+     * 每次重建 `listOfNotNull().filter()` 会产生大量短命垃圾。
+     */
+    val options: List<String> by lazy {
+        listOfNotNull(optionA, optionB, optionC, optionD, optionE).filter { it.isNotBlank() }
+    }
 }
 
 /** manifest.json：统计信息 + generated_at 版本号。 */
@@ -112,3 +117,19 @@ data class QuestionsFile(
 
 /** map 的便捷序列化器。 */
 object StringIntMapSerializer : KSerializer<Map<String, Int>> by MapSerializer(String.serializer(), Int.serializer())
+
+/**
+ * 原子写文件：先写 `xxx.tmp` 再重命名为目标文件。
+ *
+ * 直接 `writeText` 覆盖会在写入中途被杀/存储失败时留下**截断的 JSON**，
+ * 而读取侧为容错写了 `catch { emptyList() }`，结果是整个答题历史被静默清空。
+ * 临时文件 + 重命名可保证目标文件要么是旧的完整内容、要么是新的完整内容。
+ */
+internal fun File.writeTextAtomic(text: String) {
+    val tmp = File(parentFile, "$name.tmp")
+    tmp.writeText(text)
+    if (tmp.renameTo(this)) return
+    // 部分文件系统不允许 rename 覆盖已存在文件：删掉目标后重试
+    delete()
+    if (!tmp.renameTo(this)) tmp.delete()
+}

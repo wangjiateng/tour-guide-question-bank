@@ -3,6 +3,8 @@ package com.daoyou.tiku.logic
 import com.daoyou.tiku.data.Question
 import com.daoyou.tiku.data.QuestionRepository
 import com.daoyou.tiku.data.RecordsStore
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 
 /** 笔试单题（脱敏：不含答案）。 */
@@ -57,7 +59,7 @@ data class ExamResult(
  * - 题型题量 单选90+多选35+判断40（2025 官方大纲），90 分钟
  * - 分值 单选0.5/多选1/判断0.5（满分 100）
  * - 近三年真题优先 60% + 历史真题补齐 40%（历史真题不足时从近三年补足）；组内按历史出现次数平衡抽取
- * - session 为内存态（组卷后判分针对当次精确题目）
+ * - session 为内存态（组卷后判分针对当次精确题目），可经 [restoreSession] 由题号序列重建
  */
 object ExamEngine {
 
@@ -81,30 +83,8 @@ object ExamEngine {
     /** 内存试卷缓存：paperId -> 题目列表。 */
     private val sessions = mutableMapOf<String, List<Question>>()
 
-    /** 组卷并缓存 session；返回脱敏题目（不含答案）。 */
-    suspend fun examPaper(paperType: Int): ExamPaper {
-        val (subjects, label) = PAPERS[paperType] ?: error("未知的试卷类型: $paperType")
-        val pool = QuestionRepository.loadSubjects(subjects.map { it as Int? })
-        val picked = mutableListOf<Question>()
-        val typeCounts = mutableMapOf<Int, Int>()
-        for ((qType, want) in TYPE_COUNTS) {
-            val candidates = pool.filter {
-                it.qType == qType && !it.answer.isNullOrEmpty() && subjects.contains(it.subject)
-            }
-            // 近三年真题优先（目标 60%）+ 历史真题补齐（is_real_exam=true 非近三年）；
-            // 历史真题不足时从近三年补足，保证每卷题量完整；组内按出现次数平衡
-            val recent = candidates.filter { QuizBuilder.isRecent(it) }
-            val rest = candidates.filter { !QuizBuilder.isRecent(it) && it.isRealExam == true }
-            val wantRecent = Math.round(want * EXAM_RECENT_RATIO).toInt()
-            val fromRest = QuizBuilder.pickBalanced(rest, (want - minOf(wantRecent, recent.size)).coerceAtLeast(0))
-            val fromRecent = QuizBuilder.pickBalanced(recent, (want - fromRest.size).coerceAtLeast(0))
-            val chosen = fromRecent + fromRest
-            picked.addAll(chosen)
-            typeCounts[qType] = chosen.size
-        }
-        RecordsStore.bumpAppear(picked.map { it.id })
-        val paperId = "p${System.currentTimeMillis()}${(0..999999).random()}"
-        sessions[paperId] = picked
+    /** 组卷/恢复后统一生成脱敏试卷对象。 */
+    private fun buildPaper(paperId: String, paperType: Int, label: String, picked: List<Question>): ExamPaper {
         val questions = picked.map { q ->
             ExamQuestion(
                 id = q.id,
@@ -116,7 +96,52 @@ object ExamEngine {
                 years = q.years,
             )
         }
+        val typeCounts = questions.groupingBy { it.qType }.eachCount()
         return ExamPaper(paperId, paperType, label, EXAM_MINUTES, typeCounts, questions.size, questions)
+    }
+
+    /**
+     * 会话恢复：按持久化的题号序列从内置题库重取题目，重建脱敏试卷并**重新注入内存 session**。
+     * 进程被杀重启后 sessions 为空，不注入则 examCheck / examQuestionFull / examSubmit 全部返回 null。
+     *
+     * 返回 null 表示无法恢复（题型/题号缺失，如题库更新导致 id 变更）——此时**不注入**且不返回半成品，
+     * 由调用方放弃本次恢复并清掉过期快照，避免题号错位造成判分错乱。
+     */
+    suspend fun restoreSession(paperId: String, paperType: Int, questionIds: List<Long>): ExamPaper? =
+        withContext(Dispatchers.Default) {
+            if (questionIds.isEmpty()) return@withContext null
+            val (subjects, label) = PAPERS[paperType] ?: return@withContext null
+            val pool = QuestionRepository.loadSubjects(subjects.map { it as Int? })
+            val byId = pool.associateBy { it.id }
+            // 任一题缺失即整体放弃：宁可重新组卷，也不给出缺题的卷面
+            val picked = questionIds.mapNotNull { byId[it] }
+            if (picked.size != questionIds.size) return@withContext null
+            sessions[paperId] = picked
+            buildPaper(paperId, paperType, label, picked)
+        }
+
+    /** 组卷并缓存 session；返回脱敏题目（不含答案）。 */
+    suspend fun examPaper(paperType: Int): ExamPaper = withContext(Dispatchers.Default) {
+        val (subjects, label) = PAPERS[paperType] ?: error("未知的试卷类型: $paperType")
+        val pool = QuestionRepository.loadSubjects(subjects.map { it as Int? })
+        val picked = mutableListOf<Question>()
+        for ((qType, want) in TYPE_COUNTS) {
+            val candidates = pool.filter {
+                it.qType == qType && !it.answer.isNullOrEmpty() && subjects.contains(it.subject)
+            }
+            // 近三年真题优先（目标 60%）+ 历史真题补齐（is_real_exam=true 非近三年）；
+            // 历史真题不足时从近三年补足，保证每卷题量完整；组内按出现次数平衡
+            val recent = candidates.filter { QuizBuilder.isRecent(it) }
+            val rest = candidates.filter { !QuizBuilder.isRecent(it) && it.isRealExam == true }
+            val wantRecent = Math.round(want * EXAM_RECENT_RATIO).toInt()
+            val fromRest = QuizBuilder.pickBalanced(rest, (want - minOf(wantRecent, recent.size)).coerceAtLeast(0))
+            val fromRecent = QuizBuilder.pickBalanced(recent, (want - fromRest.size).coerceAtLeast(0))
+            picked.addAll(fromRecent + fromRest)
+        }
+        RecordsStore.bumpAppear(picked.map { it.id })
+        val paperId = "p${System.currentTimeMillis()}${(0..999999).random()}"
+        sessions[paperId] = picked
+        buildPaper(paperId, paperType, label, picked)
     }
 
     private fun sessionQuestion(paperId: String, questionId: Long): Question? =

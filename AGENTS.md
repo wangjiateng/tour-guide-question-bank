@@ -29,11 +29,11 @@ data/*.json（题库 JSON 唯一事实源：AI 直接读取真实文件内容维
 
 ## 2. Build & Run
 
-前置：JDK 21（`/iCoding/java/jdk-21`）+ Android SDK（`/opt/android-sdk`，写 `android/local.properties` 的 `sdk.dir`）。
+前置：JDK 21 + 本地 Android SDK（`android/local.properties` 的 `sdk.dir` 指向 SDK 路径，该文件不入库）。
 
 ```bash
 cd android
-JAVA_HOME=/iCoding/java/jdk-21 ./gradlew assembleRelease
+./gradlew assembleRelease
 # 产物：android/app/build/outputs/apk/release/app-release.apk（约 18MB，minSdk 24 / targetSdk 36）
 
 # 其他常用
@@ -73,7 +73,10 @@ JAVA_HOME=/iCoding/java/jdk-21 ./gradlew assembleRelease
 ### 数据层（data/）
 
 - `QuestionRepository`：`loadManifest()` / `loadSources()` / `loadSubjectQuestions(subject)`（assets 懒加载 + 并发去重）；`loadSubjects([null,1..4])` 拼多科目
-- `RecordsStore`：`recordAttempt` 存完整题目快照；`attempts()` 最新优先；`wrongPool()` 错题池（答错去重、最近答错优先）；`appearCount`/`bumpAppear` 组卷出现计数；`wrongIds()` 错题集合（口径与 wrongPool 一致，含毕业判定）
+- `RecordsStore`：`recordAttempt` 存完整题目快照；`attempts()` 最新优先；`wrongPool()` 错题池（答错去重、最近答错优先）；`appearCounts()` 组卷出现计数快照 / `bumpAppear` 计数 +1；`wrongIds()` 错题集合（口径与 wrongPool 一致，含毕业判定，**结果按记录版本缓存，改记录时失效**）
+- `SessionStore`：**进行中会话**持久化（`files/session_quiz.json` / `files/session_exam.json`），只存**题号序列 + 作答状态**（答题页出全池，存完整题目会每次写数 MB；题号按 id 从内置题库重取即可还原同一套题）。重启后由 `DaoyouApp` 冷启动探测一次并弹**全局**「继续 / 放弃」弹窗（不再依赖进入对应页签；点「继续」自动切到对应页签并下发恢复请求）；笔试倒计时存**绝对截止时间**（墙钟），进程被杀期间照常计时。恢复笔试必须走 `ExamEngine.restoreSession(paperId, paperType, ids)` 重新注入内存 session，否则判分链路（`examCheck`/`examSubmit`）返回 null
+- **落盘策略（性能红线）**：活动期靠 **400ms 防抖**在 IO 线程持续写盘，`Activity.onStop` 只调 `requestFlush()`（**异步**，不阻塞主线程）——进程被杀最多丢最近 <0.5s 改动，换掉同步 `runBlocking` 是因为它会在主线程排队等待、代价更大。写盘一律走**临时文件 + 重命名**原子替换（`File.writeTextAtomic`），直接覆盖会在中途失败时留下截断 JSON，而读取侧的容错 `catch` 会**静默清空整个历史**
+- **记录加载是异步的**：`RecordsStore.init` 只建文件句柄，历史在 IO 线程解码（记录内嵌完整题目，数千条即 MB 级，同步解码会拖慢冷启动首帧）。加载完成前 `loaded=false`，此时 `doFlush` 不写盘（否则会用残缺列表覆盖磁盘完整历史），`recordAttempt` 的新记录进 `pendingAttempts` 待合并重编号；`loaded` 前的窗口内 `wrongPool`/`wrongIds` 读不到新记录（冷启动瞬间，实际无影响）
 
 ### 判分规则（红线，勿混改）
 
@@ -93,6 +96,7 @@ JAVA_HOME=/iCoding/java/jdk-21 ./gradlew assembleRelease
 - **错题加权（本端增强）**：`QuizBuilder.pickBalanced` 对错题按「出现次数等效 −1」加权，优先抽中重现
 - **错题毕业**：最后一次答错后连续答对 `RecordsStore.GRADUATE_STREAK`（5）次即移出错题本与组卷加权
 - **作答记录只记答错**（答题页与笔试页一致）：答对不写记录，避免污染答题历史；例外是已在错题本中的题答对也记录一条，用于推进「连续答对 5 次毕业」计数（`README` 口径：错题池 = 答错去重 + 毕业判定）
+- **进行中进度持久化**（`SessionStore`）：答题/笔试作答与翻页即防抖落盘（400ms合并），`onStop` 兜底 `flushSync()`；退出练习/完成本轮/交卷/放弃均删快照。恢复时题目按 id 从内置题库重取，**任一题缺失即整体放弃恢复**（题库更新导致 id 变更时宁可重新组卷，避免题号错位判分错乱）
 - **笔试错题收集**：笔试判错的题即收进错题本（答对不记）；错题在笔试中答对也单独记录以推进毕业计数
 - 浏览未指定年份默认只显示近三年
 
@@ -123,6 +127,8 @@ JAVA_HOME=/iCoding/java/jdk-21 ./gradlew assembleRelease
 ## 6. Coding Conventions
 
 - 任何改动：`cd android && ./gradlew assembleRelease` 编译通过才算通过（**只保留 release 变体，debug 变体已禁用**）；改 UI 布局后**必须真机实测**（无自动化 UI 测试）
+- **主线程红线**：题库过滤/打乱/组卷等 CPU 密集工作必须包 `withContext(Dispatchers.Default)`（`randomQuiz` / `ExamEngine.examPaper` / `ExamEngine.restoreSession` 均已包）；`RecordsStore`/`SessionStore` 的写盘不得同步阻塞主线程
+- **组合性能红线**：`pagerState.currentPage` 只能在**叶子组件**内用 `derivedStateOf` 读取，且**不得作为 `LaunchedEffect` 的 key**（`remaining` 曾因作 key 导致每秒失效整棵树含 `HorizontalPager` 的 content lambda）；大 List 不得作为 `remember` 的 key（key 比较会退化成逐元素 `equals`，用 `paperId` 等标量代替）；可滚动的 `LazyColumn` 外层不得再套 `verticalScroll`（嵌套纵向滚动直接抛异常）
 - Kotlin + Jetpack Compose（Material 3）；类型集中 `data/Models.kt`，数据访问走 `QuestionRepository`（不裸读 assets）
 - 领域词汇固定：`subject`（科目 1-4）、`qType`（1 单选 / 2 多选 / 3 判断，JSON 侧为 `q_type`）
 - 数据文件用 UTF-8 无 BOM、`ensure_ascii=False` 风格（中文可读），编辑时保持
@@ -156,8 +162,8 @@ JAVA_HOME=/iCoding/java/jdk-21 ./gradlew assembleRelease
 
 ```bash
 # 构建 / 安装（统一 release 包，不要打 debug）
-cd android && JAVA_HOME=/iCoding/java/jdk-21 ./gradlew assembleRelease   # APK → app/build/outputs/apk/release/
-cd android && JAVA_HOME=/iCoding/java/jdk-21 ./gradlew installRelease    # 直接装到已连接设备
+cd android && ./gradlew assembleRelease   # APK → app/build/outputs/apk/release/
+cd android && ./gradlew installRelease    # 直接装到已连接设备
 
 # 更新题库（AI 维护）
 # 1. 读取 data/questions_X.json 真实内容
@@ -180,11 +186,3 @@ python3 scripts/dedup/dedup_pipeline.py --apply     # 执行并写回
 # 注意：ocr_fixes.json 是去重专用 OCR 错字词典，添加映射会让更多文本判为相同，务必高置信度才加
 # 去重率口径：原始采集量（各源抓取原始题量之和）→ 最终题库，整体去重率约 50%
 ```
-
-## 11. 本机构建环境要点
-
-- **`JAVA_HOME` 默认指向 Java 8**（`/iCoding/java/jdk8u242-b08`）会弄挂 gradle/sdkmanager，构建前必须切 JDK 21（`/iCoding/java/jdk-21`）
-- `sdkmanager` 需 JDK 17 且加 `--sdk_root=/opt/android-sdk`
-- Gradle 发行版官方源跳 GitHub 资产超时，`android/gradle/wrapper/gradle-wrapper.properties` 已改腾讯镜像
-- 全局 `~/.gradle/init.gradle` 预设百度内网 Maven 镜像（HTTP 明文，已加 `allowInsecureProtocol = true` 放行）
-- 首次构建若 `local.properties` 缺失（不入库），手动写 `sdk.dir=/opt/android-sdk`

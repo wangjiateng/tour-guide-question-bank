@@ -31,13 +31,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.daoyou.tiku.data.Question
+import com.daoyou.tiku.data.QuizProgress
 import com.daoyou.tiku.data.RecordsStore
+import com.daoyou.tiku.data.SessionStore
 import com.daoyou.tiku.logic.Grading
 import com.daoyou.tiku.logic.QuizBuilder
 import com.daoyou.tiku.logic.QuizOptions
@@ -56,18 +59,30 @@ private val SUBJECT_SHORT = mapOf(1 to "科一", 2 to "科二", 3 to "科三", 4
  * 因不限题量，底部栏常驻「退出练习」按钮，任何时候都能退出，不会被困在全屏里；
  * 退出或翻到最后一题「完成本轮」时上报 false，导航栏恢复。
  *
+ * 进度持久化：作答/翻页时把「题号序列 + 已答/判定/勾选 + 当前题号」防抖落盘（SessionStore），
+ * 进程被杀重启后由 App 层全局弹窗提示「继续 / 放弃」（见 DaoyouApp）；只存题号不存题目，避免每次作答写数 MB。
+ *
  * 性能要点（滑动不掉帧的关键）：
  * - pagerState.currentPage 只在 Header/BottomBar 内部经 derivedStateOf 读取，
  *   拖动时外层组合作用域不重组 → Pager 的 content lambda 引用稳定 → 相邻页不会被中途重组
  * - 逐页状态（selections/answers/results）在 QuestionPage 内部读取，重组粒度=单页
  */
 @Composable
-fun QuizScreen(activeSubject: Int?, onFullScreen: (Boolean) -> Unit) {
+fun QuizScreen(
+    activeSubject: Int?,
+    resumeRequest: QuizResumeRequest?,
+    onResumeConsumed: () -> Unit,
+    onFullScreen: (Boolean) -> Unit,
+) {
     // 两态：选科目 → 连续刷题
     var questions by remember { mutableStateOf<List<Question>?>(null) }
     var loading by remember { mutableStateOf(false) }
     var loadError by remember { mutableStateOf(false) }
     var subject by rememberSaveable { mutableIntStateOf(activeSubject ?: 1) }
+    var resumeStartPage by remember { mutableIntStateOf(0) }
+    // 题号序列：会话内恒定，加载/恢复时算一次。
+    // 不用 questions 做 remember key——它是大 List，key 比较会退化成逐题（含长字符串）的元素比较
+    var questionIds by remember { mutableStateOf<List<Long>>(emptyList()) }
     // per-index 作答/判定状态（翻页回看不重复计分）；selections 保存未确认的实时选择
     val answers = remember { mutableStateListOf<String?>() }
     val results = remember { mutableStateListOf<Boolean?>() }
@@ -76,6 +91,65 @@ fun QuizScreen(activeSubject: Int?, onFullScreen: (Boolean) -> Unit) {
 
     // 刷题中 → 全屏（隐藏底部导航）；退出/完成回到选科目页自动复位
     LaunchedEffect(questions != null) { onFullScreen(questions != null) }
+
+    // 恢复请求由 App 层全局弹窗下发（冷启动点「继续」）。key 为引用相等的请求对象，
+    // 避免 questionIds 大 List 逐元素比较。恢复逻辑需读本页状态，故仍留在页面内执行。
+    LaunchedEffect(resumeRequest) {
+        val p = resumeRequest?.progress ?: return@LaunchedEffect
+        if (questions != null) { onResumeConsumed(); return@LaunchedEffect }
+        loading = true
+        val loaded = withContext(Dispatchers.Default) {
+            try {
+                QuizBuilder.restoreQuiz(p.subject, p.questionIds)
+            } catch (e: Exception) {
+                null
+            }
+        }
+        if (loaded == null) {
+            // 题库更新导致题号缺失：快照已失效，静默丢弃
+            SessionStore.clearQuiz()
+            loadError = true
+        } else {
+            // 续答时同步科目药丸，使选项与卷面一致
+            subject = p.subject
+            answers.clear(); answers.addAll(p.answers)
+            results.clear(); results.addAll(p.results)
+            selections.clear(); selections.putAll(p.selections)
+            resumeStartPage = p.currentPage.coerceIn(0, (loaded.size - 1).coerceAtLeast(0))
+            // 续答：只打开写入口，不删磁盘快照（此刻它正是要续的内容）
+            SessionStore.resumeQuiz()
+            questionIds = loaded.map { it.id }
+            questions = loaded
+        }
+        loading = false
+        onResumeConsumed()
+    }
+
+    /** 把当前进度写盘（SessionStore 内防抖合并）。 */
+    fun persist(page: Int) {
+        if (questions == null) return
+        SessionStore.saveQuiz(
+            QuizProgress(
+                subject = subject,
+                questionIds = questionIds,
+                answers = answers.toList(),
+                results = results.toList(),
+                selections = selections.toMap(),
+                currentPage = page,
+            ),
+        )
+    }
+
+    /** 开始新会话：先清残留快照再打开写入口。 */
+    fun beginSession() {
+        SessionStore.beginQuiz()
+    }
+
+    /** 结束会话（退出/完成/放弃）：删快照，再回选科目页。 */
+    fun endSession() {
+        SessionStore.clearQuiz()
+        questions = null
+    }
 
     val qs = questions
     if (qs == null) {
@@ -136,6 +210,9 @@ fun QuizScreen(activeSubject: Int?, onFullScreen: (Boolean) -> Unit) {
                         } else {
                             answers.addAll(List(loaded.size) { null })
                             results.addAll(List(loaded.size) { null })
+                            resumeStartPage = 0
+                            beginSession()
+                            questionIds = loaded.map { it.id }
                             questions = loaded
                         }
                         loading = false
@@ -145,7 +222,16 @@ fun QuizScreen(activeSubject: Int?, onFullScreen: (Boolean) -> Unit) {
             if (loading) { CircularProgressIndicator() }
         }
     } else {
-        val pagerState = rememberPagerState(pageCount = { qs.size })
+        val pagerState = rememberPagerState(
+            initialPage = resumeStartPage.coerceIn(0, (qs.size - 1).coerceAtLeast(0)),
+            pageCount = { qs.size },
+        )
+
+        // 翻页即落盘当前题号（防抖在 SessionStore 内合并）
+        LaunchedEffect(pagerState) {
+            snapshotFlow { pagerState.currentPage }
+                .collect { persist(it) }
+        }
 
         // 结构：顶部信息 + 翻页器撑满中间（全屏可滑，页内自行纵向滚动）+ 底部按钮栏
         Column(
@@ -162,14 +248,21 @@ fun QuizScreen(activeSubject: Int?, onFullScreen: (Boolean) -> Unit) {
                 beyondViewportPageCount = 1,
                 modifier = Modifier.fillMaxWidth().weight(1f),
             ) { p ->
-                QuestionPage(q = qs[p], page = p, selections = selections, answers = answers, results = results)
+                QuestionPage(
+                    q = qs[p],
+                    page = p,
+                    selections = selections,
+                    answers = answers,
+                    results = results,
+                    onCommitted = { persist(p) },
+                )
             }
             // 底部按钮栏（固定）：退出练习 / 上一题 / 下一题
             PracticeBottomBar(
                 pagerState = pagerState,
                 total = qs.size,
                 scope = scope,
-                onFinish = { questions = null },
+                onFinish = { endSession() },
             )
         }
     }
@@ -179,8 +272,12 @@ fun QuizScreen(activeSubject: Int?, onFullScreen: (Boolean) -> Unit) {
 @Composable
 private fun PracticeHeader(pagerState: PagerState, results: SnapshotStateList<Boolean?>, total: Int) {
     val page by remember(pagerState) { derivedStateOf { pagerState.currentPage } }
+    // results 是同一个 SnapshotStateList 实例，故不能用 remember(results)（引用不变则永不更新）；
+    // derivedStateOf 把「答对总数」降为标量 —— 翻页不再重算，且作答后总数未变（答错）时不触发重组。
+    // 实测答题池约 830 题（近三年真题 ∪ 题引力），单次扫描成本在微秒级，故不引入额外的计数器状态。
+    val correctCount by remember { derivedStateOf { results.count { it == true } } }
     Text(
-        text = "第 ${page + 1} / $total 题 · 本次答对 ${results.count { it == true }}",
+        text = "第 ${page + 1} / $total 题 · 本次答对 $correctCount",
         style = MaterialTheme.typography.labelMedium,
         color = MaterialTheme.colorScheme.outline,
     )
@@ -194,11 +291,16 @@ internal fun QuestionPage(
     selections: SnapshotStateMap<Int, Set<String>>,
     answers: SnapshotStateList<String?>,
     results: SnapshotStateList<Boolean?>,
+    /** 作答提交后回调（用于把进度落盘）；多选勾选等未判定变更不触发。 */
+    onCommitted: (Int) -> Unit = {},
 ) {
-    // 某页的实时选择：优先取未确认的实时值，其次取已提交答案
-    val selected = selections[page]
-        ?: answers[page]?.map { it.toString() }?.toSet()
-        ?: emptySet()
+    // 某页的实时选择：优先取未确认的实时值，其次取已提交答案。
+    // 按最终值缓存，避免滑动中相邻页重组合时重建 List/Set
+    val selected = remember(selections[page], answers[page]) {
+        selections[page]
+            ?: answers[page]?.map { it.toString() }?.toSet()
+            ?: emptySet()
+    }
     val revealed = results[page] != null
     Column(
         // 铺满页面底色：翻页时相邻页无缝隙、无露底黑框
@@ -220,6 +322,7 @@ internal fun QuestionPage(
                     else -> {
                         selections[page] = setOf(letter)
                         commitQuestion(q, page, letter, answers, results)
+                        onCommitted(page)
                     }
                 }
             },
@@ -229,7 +332,10 @@ internal fun QuestionPage(
             Spacer(Modifier.height(4.dp))
             Button(
                 enabled = selected.isNotEmpty(),
-                onClick = { commitQuestion(q, page, selected.sorted().joinToString(""), answers, results) },
+                onClick = {
+                    commitQuestion(q, page, selected.sorted().joinToString(""), answers, results)
+                    onCommitted(page)
+                },
                 modifier = Modifier.fillMaxWidth(),
             ) { Text("确认答案") }
         }
